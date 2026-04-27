@@ -1,0 +1,153 @@
+---
+title: "Set up a local Nexu development environment"
+description: "Install dependencies, build shared packages, and start the full Nexu local dev stack — controller, web, desktop, and OpenClaw runtime."
+---
+
+This guide walks you through the minimal steps to get Nexu running locally from source. The full stack starts four services in order: OpenClaw runtime → controller → web → desktop. All state in dev mode is isolated under `.tmp/desktop/` in the repo root and does not affect any installed packaged app.
+
+## Prerequisites
+
+Before cloning the repo, make sure you have the following installed:
+
+| Requirement | Version | Notes |
+| --- | --- | --- |
+| Node.js | 24 or later | LTS recommended; enforced via `package.json` `engines` |
+| pnpm | 10.26 or later | Repo pins `pnpm@10.26.0` via `packageManager` field |
+| npm | 11 or later | Required for OpenClaw runtime maintenance flows |
+| Git | Any recent version | — |
+
+<Warning>
+  `pnpm start` and certain launchd integration tests require macOS (they use launchd for process management). If you are contributing to desktop code, test on macOS before submitting a PR. The test suite skips launchd tests automatically on non-macOS platforms.
+</Warning>
+
+## Getting started
+
+<Steps>
+  <Step title="Clone the repository">
+    Clone from the repo root — not just the `docs/` subdirectory:
+
+    ```bash
+    git clone https://github.com/nexu-io/nexu.git
+    cd nexu
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    Run `pnpm install` from the repo root. The `postinstall` script sets up the OpenClaw runtime via `packages/slimclaw` automatically. The first install can take a few minutes.
+
+    ```bash
+    pnpm install
+    ```
+  </Step>
+
+  <Step title="Build the shared package">
+    The `@nexu/shared` package must be compiled before the dev flow can cold-start. This is required once on a fresh clone and whenever you change schemas in `packages/shared/`:
+
+    ```bash
+    pnpm --filter @nexu/shared build
+    ```
+  </Step>
+
+  <Step title="Start the dev stack">
+    Start all four services (OpenClaw → controller → web → desktop) with a single command:
+
+    ```bash
+    pnpm dev start
+    ```
+
+    The stack boots in dependency order. Use `pnpm dev logs <service>` to tail output for any individual service once it is running.
+  </Step>
+</Steps>
+
+<Tip>
+  Use `pnpm dev logs <service>` to tail up to the last 200 lines of session-scoped output for any service. For example: `pnpm dev logs controller` or `pnpm dev logs desktop`.
+</Tip>
+
+## Repository layout
+
+| Path | Description |
+| --- | --- |
+| `apps/controller/` | Hono backend — Nexu config store, OpenClaw config compiler, and runtime orchestration |
+| `apps/web/` | React + Ant Design + Vite dashboard frontend |
+| `apps/desktop/` | Electron desktop shell and sidecar orchestrator |
+| `packages/shared/` | Shared Zod schemas used across controller and web |
+| `packages/slimclaw/` | Repo-local OpenClaw runtime contract, prepared runtime root, and staging/patch ownership |
+| `nexu-skills/` | Public file-based skill repository; each skill is a directory with a `SKILL.md` frontmatter |
+| `specs/` | Design docs, product specs, API patterns, exec plans, and generated artifacts |
+
+## Common commands
+
+Run all commands from the repo root unless otherwise noted.
+
+### Dev stack management
+
+| Command | Purpose |
+| --- | --- |
+| `pnpm dev start` | Start the full local stack: OpenClaw → controller → web → desktop |
+| `pnpm dev start <service>` | Start one service: `desktop`, `openclaw`, `controller`, or `web` |
+| `pnpm dev stop` | Stop the full local stack in reverse order |
+| `pnpm dev stop <service>` | Stop one service |
+| `pnpm dev restart` | Restart the full local stack (clean recycle) |
+| `pnpm dev restart <service>` | Restart one service |
+| `pnpm dev status <service>` | Show status for one service |
+| `pnpm dev logs <service>` | Tail up to 200 lines of session-scoped logs for one service |
+
+### Build and quality checks
+
+| Command | Purpose |
+| --- | --- |
+| `pnpm build` | Production build across all packages |
+| `pnpm typecheck` | TypeScript checks across the workspace |
+| `pnpm lint` | Biome lint check |
+| `pnpm test` | Run the Vitest suite |
+| `pnpm generate-types` | Regenerate OpenAPI spec → frontend SDK (`openapi.json` → `sdk.gen.ts` → `types.gen.ts`) |
+| `pnpm check:esm-imports` | Scan built dist for extensionless relative ESM specifiers (also runs in CI) |
+| `pnpm format` | Format and write with Biome |
+
+<Note>
+  After any API route or schema change, run `pnpm generate-types` then `pnpm typecheck`. The frontend SDK at `apps/web/lib/api/` is generated — never hand-edit it.
+</Note>
+
+### Desktop inspect commands
+
+These commands let you inspect the running dev desktop window without exposing a public API:
+
+| Command | Purpose |
+| --- | --- |
+| `pnpm dev inspect screenshot` | Capture the current desktop window as a screenshot |
+| `pnpm dev inspect eval "<expr>"` | Evaluate a JavaScript expression in the desktop renderer |
+| `pnpm dev inspect dom` | Dump a summary of the current renderer DOM |
+| `pnpm dev inspect logs` | Show buffered renderer console and error logs |
+
+## Dev environment overrides
+
+`tools/dev/.env.example` is the source-of-truth template for dev-only overrides. Copy it to `tools/dev/.env` only when you need to change ports, URLs, state paths, or the shared OpenClaw gateway token:
+
+```bash
+# POSIX
+cp tools/dev/.env.example tools/dev/.env
+
+# Windows
+copy tools/dev/.env.example tools/dev/.env
+```
+
+You do not need this file for the default dev flow.
+
+## Resetting dev state
+
+Dev state is scoped to `.tmp/desktop/` in the repo root and does not touch your packaged app installation.
+
+```bash
+# Stop the stack, then remove dev state
+pnpm dev stop
+rm -rf .tmp/desktop/
+```
+
+To do a full reset including controller state:
+
+```bash
+pnpm dev stop
+rm -rf .tmp/desktop/
+rm -rf ~/.nexu/
+rm -rf ~/Library/Application\ Support/@nexu/desktop/
+```

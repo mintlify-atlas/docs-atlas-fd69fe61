@@ -1,0 +1,212 @@
+---
+title: "Additional channels: WeCom, DingTalk, Telegram, WhatsApp, QQ"
+description: "Step-by-step setup for WeCom Intelligent Bot, DingTalk app bot, Telegram via BotFather, WhatsApp QR scan, and QQ Open Platform bot connections."
+---
+
+Beyond the primary channels, Nexu supports five additional messaging platforms: **WeCom**, **DingTalk**, **Telegram**, **WhatsApp**, and **QQ**. Each connects with a different credential type, but all share the same local-first principle — no public server or callback URL is required.
+
+<AccordionGroup>
+  <Accordion title="WeCom (Enterprise WeChat)">
+    WeCom uses the **Intelligent Bot** feature inside the WeCom client. You need a **Bot ID** and a **Secret** to connect.
+
+    **Prerequisites:**
+    - If you are already part of a WeCom organization, you need enterprise admin permission to create an Intelligent Bot.
+    - If you are an individual, you can register a free WeCom account and create the bot yourself.
+
+    **Steps:**
+
+    <Steps>
+      <Step title="Open Intelligent Bot in WeCom">
+        In the WeCom client, click **Workbench** in the left sidebar, switch to **Smart Office** at the top, then open **Intelligent Bot**.
+      </Step>
+
+      <Step title="Create a bot in API mode">
+        1. Click **Create Bot**.
+        2. In the creation dialog, click **Manual Create** in the lower-left corner.
+        3. On the creation page, click **Create in API Mode** on the right.
+        4. In API settings, choose **Use Long Connection**.
+        5. Copy and save your **Bot ID** and **Secret**.
+      </Step>
+
+      <Step title="Grant permissions">
+        1. On the same settings page, scroll down to **Available Permissions** and click the expand button.
+        2. Click **Authorize All** to grant the full permission set.
+      </Step>
+
+      <Step title="Set visibility scope and save">
+        1. Confirm or adjust the visibility scope so the intended members can see and use the bot.
+        2. Edit the bot avatar, name, and description as needed, then click **Confirm**.
+        3. Click **Save** at the bottom of the settings page.
+      </Step>
+
+      <Step title="Connect in Nexu">
+        In the Nexu client, navigate to **Channels → WeCom**, paste your **Bot ID** and **Secret**, and click **Connect WeCom**.
+
+        Once connected, find the bot in your WeCom Contacts or bot list and click **Send Message** to start chatting.
+      </Step>
+    </Steps>
+
+    <Note>
+      Choosing **Use Long Connection** means no public callback address is required.
+    </Note>
+
+    **Troubleshooting:** If the bot is not replying, verify the Bot ID and Secret are correct, permissions have been granted, and the visibility scope includes your account. Also confirm the Nexu client is still running.
+  </Accordion>
+
+  <Accordion title="DingTalk">
+    DingTalk requires a **Client ID** and **Client Secret** from a DingTalk app you create on the developer platform. The app also needs bot capability enabled and a published version.
+
+    **Steps:**
+
+    <Steps>
+      <Step title="Sign in to the DingTalk developer platform">
+        Go to [open.dingtalk.com](https://open.dingtalk.com) and use the DingTalk app to scan the login QR code.
+      </Step>
+
+      <Step title="Create a DingTalk app">
+        1. On the home page, click **Create App**.
+        2. Fill in the app name, description, and icon, then click **Save**.
+      </Step>
+
+      <Step title="Add bot capability">
+        1. Open the app details page, go to **Add App Capability**, and click **Add** on the Bot card.
+        2. Open the **Bot** page on the left and enable bot configuration.
+        3. Fill in the bot name, profile, avatar, language settings, and receive mode, then click **Publish** at the bottom.
+      </Step>
+
+      <Step title="Grant permissions">
+        Open **Permission Management** on the left and apply for the required permissions.
+
+        For AI streaming replies (ChatGPT-style progressive output), enable:
+        - **Card.Instance.Write** — AI Card write permission
+        - **Card.Streaming.Write** — AI Card streaming output permission
+
+        <Tip>
+          Without AI Card permissions, the bot still works but sends replies as plain text messages instead of streaming cards.
+        </Tip>
+      </Step>
+
+      <Step title="Copy credentials and publish a version">
+        1. Go back to the credentials page and copy the **Client ID** and **Client Secret**.
+        2. Open **Version Management & Release**, click **Create New Version**, fill in the version number, release notes, and visibility scope, then save.
+        3. Complete the DingTalk publishing flow so the bot goes live.
+      </Step>
+
+      <Step title="Connect in Nexu">
+        In the Nexu client, navigate to **Channels → DingTalk**, paste your **Client ID** and **Client Secret**, and click **Connect DingTalk**.
+
+        Once connected, open DingTalk and start chatting with the bot.
+      </Step>
+    </Steps>
+
+    **Troubleshooting:** If the bot is not replying, confirm that: bot capability is enabled, permissions are granted, a version has been published, and the Nexu client is running. If teammates cannot see the app, check the visibility scope in version publishing.
+  </Accordion>
+
+  <Accordion title="Telegram">
+    Telegram is the simplest channel to connect. All you need is a single **Bot Token** created via BotFather.
+
+    **Steps:**
+
+    <Steps>
+      <Step title="Create a bot with BotFather">
+        1. Open Telegram and search for **BotFather**.
+        2. Send the command `/newbot`.
+        3. Enter a **display name** for your bot (e.g. `My Nexu Bot`).
+        4. Enter a **username** — must end in `bot` (e.g. `mynexubot`).
+        5. BotFather replies with a **Bot Token** in the format `8549010317:AAEZw-DEou...`. Copy and save it.
+      </Step>
+
+      <Step title="Connect in Nexu">
+        In the Nexu client, navigate to **Channels → Telegram**, paste your **Bot Token** into the field, and click **Connect Telegram**.
+      </Step>
+
+      <Step title="Start a conversation">
+        Search for your bot's username in Telegram and send `/start` to begin chatting with your OpenClaw agent.
+      </Step>
+    </Steps>
+
+    <Note>
+      Nexu uses Telegram Bot API's Long Polling mode. No public IP address or Webhook URL is required.
+    </Note>
+
+    **Group chats:** Add the bot to a Telegram group and mention its username in a message to trigger a reply.
+
+    **Availability:** The Nexu client must be running. As long as Nexu is active in the background and your computer is not asleep, the agent replies to Telegram messages 24/7.
+  </Accordion>
+
+  <Accordion title="WhatsApp">
+    Nexu connects to your **personal WhatsApp** account via a QR code scan — the same mechanism as WhatsApp Web. No WhatsApp Business account is needed.
+
+    **Steps:**
+
+    <Steps>
+      <Step title="Select the WhatsApp channel">
+        In the Nexu client, navigate to **Channels → WhatsApp**.
+      </Step>
+
+      <Step title="Scan the QR code">
+        1. Click **Scan WhatsApp QR** in the Connect WhatsApp dialog.
+        2. Nexu generates a QR code and shows **Waiting for WhatsApp scan**.
+        3. Open **WhatsApp** on your phone, tap the **You** tab at the bottom, then tap the QR code icon in the top right.
+        4. On the QR code page, tap **Scan** and point your phone at the code on your Mac screen.
+        5. Tap **OK** on your phone to confirm the link.
+      </Step>
+
+      <Step title="Start chatting">
+        Once the QR code is scanned successfully, the WhatsApp channel shows as **Connected**. Click **Chat** to start a conversation with your agent.
+      </Step>
+    </Steps>
+
+    <Warning>
+      If the QR code never appears or keeps loading, check your network connection. If you use a proxy tool such as Clash or Surge, switch the outbound mode to **Global** and try again.
+    </Warning>
+
+    **Notes:**
+    - Nexu connects as a linked device, exactly like WhatsApp Web. Your phone continues to work normally.
+    - The Nexu client must be running for the agent to reply. If your Mac is asleep, the agent goes offline.
+  </Accordion>
+
+  <Accordion title="QQ Bot">
+    Nexu connects to QQ through the **QQ Open Platform**. You need an **App ID** and an **App Secret** from a bot you create there.
+
+    **Steps:**
+
+    <Steps>
+      <Step title="Sign in to the QQ Open Platform">
+        Go to [q.qq.com/qqbot/openclaw/login.html](https://q.qq.com/qqbot/openclaw/login.html) and use mobile QQ to scan the login QR code. Tap **Agree** in mobile QQ to finish signing in.
+      </Step>
+
+      <Step title="Create a QQ bot">
+        After signing in, click **Create Bot** in the bot list and complete the creation form.
+      </Step>
+
+      <Step title="Copy credentials">
+        On the bot details page, copy and immediately save:
+        - **App ID**
+        - **App Secret**
+
+        <Warning>
+          The full App Secret may only be shown once. Save it immediately — if you navigate away without saving it, you will need to regenerate it.
+        </Warning>
+      </Step>
+
+      <Step title="Connect in Nexu">
+        In the Nexu client, navigate to **Channels → QQ**, paste your **App ID** and **App Secret**, and click **Connect QQ**.
+      </Step>
+
+      <Step title="Start chatting">
+        Open desktop QQ or mobile QQ, find the bot conversation you created, and send a message to start chatting with your agent.
+      </Step>
+    </Steps>
+
+    **Group chats:** You can add the QQ bot to a QQ group. Test it in a private conversation first to confirm it responds before adding it to groups.
+
+    **Troubleshooting:** If the bot is not replying, verify the App ID and App Secret are correct, the Nexu client is running, and you are messaging the exact bot you created.
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  All five platforms on this page use local long-polling or WebSocket connections from your machine. None require a public server, static IP, or externally reachable callback URL.
+</Note>
+
+For the primary channels — Feishu, Slack, Discord, and WeChat — see their dedicated setup pages in the [Channels overview](/channels/overview).

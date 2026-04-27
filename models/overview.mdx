@@ -1,0 +1,43 @@
+---
+title: "AI model configuration in Nexu"
+description: "Connect AI models to your Nexu Agent using Nexu Official managed models or your own API keys. API keys are stored locally and never uploaded."
+---
+
+Nexu supports two ways to connect AI models to your Agent. **Nexu Official** lets you sign in and start immediately with managed models backed by shared credits. **BYOK (Bring Your Own Key)** lets you connect your own provider API keys for direct billing. You can switch between them at any time without affecting existing conversations or channel connections.
+
+## Two integration paths
+
+### Nexu Official
+
+Sign in to Nexu and use managed models right away. No API key is required. Credits are deducted per conversation based on the model you choose.
+
+Once signed in, select the model from the **Nexu Bot Model** dropdown at the top of the Settings page.
+
+### Bring Your Own Key (BYOK)
+
+Paste your API key for any supported provider. Nexu verifies the key, loads the available model list, and bills you directly through the provider. No Nexu credits are consumed in BYOK mode.
+
+## Supported providers
+
+| Provider | Default base URL | Key format |
+| --- | --- | --- |
+| Anthropic | `https://api.anthropic.com` | `sk-ant-...` |
+| OpenAI | `https://api.openai.com/v1` | `sk-...` |
+| Google AI | `https://generativelanguage.googleapis.com/v1beta` | `AIza...` |
+| xAI | `https://api.x.ai/v1` | `xai-...` |
+| Custom | Your OpenAI-compatible endpoint | Depends on provider |
+
+<Note>
+  API keys are stored on your local device and are never uploaded to Nexu servers.
+</Note>
+
+## Learn more
+
+<CardGroup cols={2}>
+  <Card title="Bring Your Own Key" icon="key" href="/models/byok">
+    Set up a provider API key, configure a proxy URL, and select your active model.
+  </Card>
+  <Card title="OAuth login" icon="arrow-right-to-bracket" href="/models/oauth">
+    Use OAuth to connect MiniMax, OpenAI Codex, or GLM without pasting a key.
+  </Card>
+</CardGroup>

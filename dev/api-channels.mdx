@@ -1,0 +1,443 @@
+---
+title: "Channels API: connect messaging platforms"
+description: "REST endpoints for listing, connecting, and disconnecting Nexu channels: Slack, Discord, Feishu, WeChat, WeCom, DingTalk, Telegram, WhatsApp, and QQ Bot."
+---
+
+Channels represent connections between a Nexu bot and a messaging platform. The Channels API covers the full lifecycle: listing connected channels, connecting new ones with platform-specific credentials, polling live status, and disconnecting. Most connect endpoints validate credentials against the upstream platform before persisting the channel config and syncing the local runtime.
+
+## Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/v1/channels` | List all channels |
+| `GET` | `/api/v1/channels/live-status` | Live channel and agent status |
+| `GET` | `/api/v1/channels/{channelId}/status` | Get a single channel |
+| `GET` | `/api/v1/channels/{channelId}/readiness` | Channel readiness from runtime |
+| `DELETE` | `/api/v1/channels/{channelId}` | Disconnect a channel |
+| `POST` | `/api/v1/channels/slack/connect` | Connect Slack |
+| `GET` | `/api/v1/channels/slack/oauth-url` | Get Slack OAuth URL |
+| `POST` | `/api/v1/channels/discord/connect` | Connect Discord |
+| `POST` | `/api/v1/channels/feishu/connect` | Connect Feishu |
+| `POST` | `/api/v1/channels/telegram/connect` | Connect Telegram |
+| `POST` | `/api/v1/channels/dingtalk/connect` | Connect DingTalk |
+| `POST` | `/api/v1/channels/dingtalk/test` | Test DingTalk credentials |
+| `POST` | `/api/v1/channels/wecom/connect` | Connect WeCom |
+| `POST` | `/api/v1/channels/wecom/test` | Test WeCom credentials |
+| `POST` | `/api/v1/channels/qqbot/connect` | Connect QQ Bot |
+| `POST` | `/api/v1/channels/qqbot/test` | Test QQ Bot credentials |
+| `POST` | `/api/v1/channels/wechat/qr-start` | Start WeChat QR login |
+| `POST` | `/api/v1/channels/wechat/qr-wait` | Poll WeChat QR status |
+| `POST` | `/api/v1/channels/wechat/connect` | Finalize WeChat connection |
+| `POST` | `/api/v1/channels/whatsapp/qr-start` | Start WhatsApp QR login |
+| `POST` | `/api/v1/channels/whatsapp/qr-wait` | Poll WhatsApp QR status |
+| `POST` | `/api/v1/channels/whatsapp/connect` | Finalize WhatsApp connection |
+
+---
+
+## Channel object
+
+Most channel endpoints return a channel object with the following shape:
+
+<ResponseField name="id" type="string" required>Unique channel identifier.</ResponseField>
+<ResponseField name="botId" type="string" required>ID of the bot this channel belongs to.</ResponseField>
+<ResponseField name="channelType" type='"slack" | "discord" | "feishu" | "dingtalk" | "wecom" | "wechat" | "telegram" | "whatsapp" | "qqbot"' required>Platform type.</ResponseField>
+<ResponseField name="accountId" type="string" required>Platform-specific account identifier.</ResponseField>
+<ResponseField name="status" type='"pending" | "connected" | "disconnected" | "error"' required>Current connection status.</ResponseField>
+<ResponseField name="teamName" type="string | null" required>Workspace or team name. `null` if not applicable.</ResponseField>
+<ResponseField name="appId" type="string | null">Platform app identifier. Present for Slack, Discord, Feishu, QQ Bot.</ResponseField>
+<ResponseField name="botUserId" type="string | null">Bot's user ID on the platform.</ResponseField>
+<ResponseField name="createdAt" type="string" required>ISO 8601 creation timestamp.</ResponseField>
+<ResponseField name="updatedAt" type="string" required>ISO 8601 last-updated timestamp.</ResponseField>
+
+---
+
+## Channel connect error object
+
+Connect endpoints that validate credentials upstream can return structured errors:
+
+<ResponseField name="message" type="string" required>Human-readable error message, localised to the controller's configured locale.</ResponseField>
+<ResponseField name="code" type='"already_connected" | "app_id_mismatch" | "invalid_credentials" | "network_error" | "proxy_error" | "sync_failed" | "timeout" | "upstream_http_error"' required>Machine-readable error code.</ResponseField>
+<ResponseField name="requestId" type="string" required>Request correlation ID.</ResponseField>
+<ResponseField name="retryable" type="boolean" required>Whether the client should offer a retry.</ResponseField>
+<ResponseField name="phase" type='"verify_credentials" | "verify_app" | "persist_config" | "sync_runtime"' required>The pipeline phase where the failure occurred.</ResponseField>
+
+---
+
+## GET /api/v1/channels
+
+List all connected channels.
+
+**Response 200**
+
+<ResponseField name="channels" type="object[]" required>
+  Array of channel objects.
+</ResponseField>
+
+```bash
+curl http://localhost:<port>/api/v1/channels \
+  -H "Authorization: Bearer <GATEWAY_TOKEN>"
+```
+
+---
+
+## DELETE /api/v1/channels/{channelId}
+
+Disconnect and remove a channel.
+
+**Path parameters**
+
+<ParamField path="channelId" type="string" required>
+  The channel's unique identifier.
+</ParamField>
+
+**Response 200**
+
+<ResponseField name="success" type="boolean" required>`true` when disconnected.</ResponseField>
+
+```bash
+curl -X DELETE http://localhost:<port>/api/v1/channels/clxyz456 \
+  -H "Authorization: Bearer <GATEWAY_TOKEN>"
+```
+
+---
+
+## POST /api/v1/channels/slack/connect
+
+Connect a Slack workspace using Bot Token credentials.
+
+**Request body**
+
+<ParamField body="botToken" type="string" required>
+  Slack bot OAuth token (starts with `xoxb-`).
+</ParamField>
+
+<ParamField body="signingSecret" type="string" required>
+  Slack app signing secret.
+</ParamField>
+
+<ParamField body="teamId" type="string">
+  Slack workspace team ID. Optional.
+</ParamField>
+
+<ParamField body="teamName" type="string">
+  Slack workspace display name. Optional.
+</ParamField>
+
+<ParamField body="appId" type="string">
+  Slack app ID. Optional.
+</ParamField>
+
+**Response 200** — The connected channel object.
+
+**Response 409** — Credentials invalid. Returns `{ message: string }`.
+
+```bash
+curl -X POST http://localhost:<port>/api/v1/channels/slack/connect \
+  -H "Authorization: Bearer <GATEWAY_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "botToken": "xoxb-...",
+    "signingSecret": "abc123..."
+  }'
+```
+
+---
+
+## GET /api/v1/channels/slack/oauth-url
+
+Get the Slack OAuth redirect URL. Used by the dashboard to initiate the manual Slack connect flow.
+
+**Query parameters**
+
+<ParamField query="returnTo" type="string">
+  URL to redirect to after OAuth. Optional.
+</ParamField>
+
+**Response 200**
+
+<ResponseField name="url" type="string" required>OAuth redirect URL.</ResponseField>
+<ResponseField name="redirectUri" type="string" required>OAuth redirect URI registered with Slack.</ResponseField>
+
+---
+
+## POST /api/v1/channels/feishu/connect
+
+Connect a Feishu (Lark) bot using App ID and App Secret.
+
+**Request body**
+
+<ParamField body="appId" type="string" required>
+  Feishu app ID.
+</ParamField>
+
+<ParamField body="appSecret" type="string" required>
+  Feishu app secret.
+</ParamField>
+
+<ParamField body="connectionMode" type='"websocket" | "webhook"'>
+  Connection mode. Optional; defaults to websocket.
+</ParamField>
+
+<ParamField body="verificationToken" type="string">
+  Feishu verification token. Required when using webhook mode.
+</ParamField>
+
+**Response 200** — The connected channel object.
+
+**Response 409** — Credentials invalid.
+
+```bash
+curl -X POST http://localhost:<port>/api/v1/channels/feishu/connect \
+  -H "Authorization: Bearer <GATEWAY_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "appId": "cli_abc123",
+    "appSecret": "secret..."
+  }'
+```
+
+---
+
+## POST /api/v1/channels/discord/connect
+
+Connect a Discord bot. Credentials are validated against the Discord API before the channel is persisted.
+
+**Request body**
+
+<ParamField body="botToken" type="string" required>
+  Discord bot token.
+</ParamField>
+
+<ParamField body="appId" type="string" required>
+  Discord application (client) ID.
+</ParamField>
+
+<ParamField body="guildId" type="string">
+  Discord server (guild) ID. Optional.
+</ParamField>
+
+<ParamField body="guildName" type="string">
+  Discord server display name. Optional.
+</ParamField>
+
+**Response 200** — The connected channel object.
+
+**Response 422 / 502 / 503 / 504** — Structured connect error object (see [channel connect error](#channel-connect-error-object)).
+
+```bash
+curl -X POST http://localhost:<port>/api/v1/channels/discord/connect \
+  -H "Authorization: Bearer <GATEWAY_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "botToken": "Bot MTAx...",
+    "appId": "1234567890"
+  }'
+```
+
+---
+
+## POST /api/v1/channels/telegram/connect
+
+Connect a Telegram bot.
+
+**Request body**
+
+<ParamField body="botToken" type="string" required>
+  Telegram bot token from BotFather.
+</ParamField>
+
+**Response 200** — The connected channel object.
+
+**Response 422 / 502 / 503 / 504** — Structured connect error object.
+
+---
+
+## POST /api/v1/channels/dingtalk/connect
+
+Connect a DingTalk bot. Credentials are validated against the DingTalk API.
+
+**Request body**
+
+<ParamField body="clientId" type="string" required>
+  DingTalk application client ID.
+</ParamField>
+
+<ParamField body="clientSecret" type="string" required>
+  DingTalk application client secret.
+</ParamField>
+
+**Response 200** — The connected channel object.
+
+**Response 422 / 502 / 503 / 504** — Structured connect error object.
+
+---
+
+## POST /api/v1/channels/dingtalk/test
+
+Test DingTalk credentials without persisting the channel.
+
+**Request body** — Same as `/dingtalk/connect`.
+
+**Response 200**
+
+<ResponseField name="success" type="boolean" required>Whether credentials are valid.</ResponseField>
+<ResponseField name="message" type="string" required>Human-readable result message.</ResponseField>
+
+---
+
+## POST /api/v1/channels/wecom/connect
+
+Connect a WeCom (Enterprise WeChat) bot.
+
+**Request body**
+
+<ParamField body="botId" type="string" required>
+  WeCom bot ID.
+</ParamField>
+
+<ParamField body="secret" type="string" required>
+  WeCom bot secret.
+</ParamField>
+
+**Response 200** — The connected channel object.
+
+**Response 409** — Credentials invalid.
+
+---
+
+## POST /api/v1/channels/qqbot/connect
+
+Connect a QQ Bot using App ID and App Secret.
+
+**Request body**
+
+<ParamField body="appId" type="string" required>
+  QQ Bot application ID.
+</ParamField>
+
+<ParamField body="appSecret" type="string" required>
+  QQ Bot application secret.
+</ParamField>
+
+**Response 200** — The connected channel object.
+
+**Response 409** — Credentials invalid.
+
+---
+
+## WeChat QR login flow
+
+WeChat uses a QR-based login flow. Complete the connection in three steps:
+
+<Steps>
+  <Step title="Start QR session">
+    `POST /api/v1/channels/wechat/qr-start` — Returns a QR data URL and a session key.
+  </Step>
+  <Step title="Poll for scan">
+    `POST /api/v1/channels/wechat/qr-wait` — Pass the `sessionKey` and poll until `connected` is `true`.
+  </Step>
+  <Step title="Finalize connection">
+    `POST /api/v1/channels/wechat/connect` — Pass the `accountId` returned by the wait step.
+  </Step>
+</Steps>
+
+### POST /api/v1/channels/wechat/qr-start
+
+**Response 200**
+
+<ResponseField name="qrDataUrl" type="string">Base64 data URL for the QR code image. Display this to the user.</ResponseField>
+<ResponseField name="sessionKey" type="string">Session key to pass to `qr-wait`.</ResponseField>
+<ResponseField name="message" type="string" required>Status message.</ResponseField>
+
+**Response 502** — Gateway not connected.
+
+### POST /api/v1/channels/wechat/qr-wait
+
+**Request body**
+
+<ParamField body="sessionKey" type="string" required>
+  Session key returned by `qr-start`.
+</ParamField>
+
+**Response 200**
+
+<ResponseField name="connected" type="boolean" required>Whether the QR code has been scanned and login confirmed.</ResponseField>
+<ResponseField name="message" type="string" required>Status message.</ResponseField>
+<ResponseField name="accountId" type="string">WeChat account ID. Present when `connected` is `true`.</ResponseField>
+
+### POST /api/v1/channels/wechat/connect
+
+**Request body**
+
+<ParamField body="accountId" type="string" required>
+  WeChat account ID returned by `qr-wait`.
+</ParamField>
+
+**Response 200** — The connected channel object.
+
+**Response 409** — Connection failed.
+
+```bash
+# Step 1: start QR
+SESSION=$(curl -s -X POST http://localhost:<port>/api/v1/channels/wechat/qr-start \
+  -H "Authorization: Bearer <GATEWAY_TOKEN>" | jq -r '.sessionKey')
+
+# Step 2: poll until connected
+curl -X POST http://localhost:<port>/api/v1/channels/wechat/qr-wait \
+  -H "Authorization: Bearer <GATEWAY_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d "{\"sessionKey\": \"$SESSION\"}"
+```
+
+---
+
+## WhatsApp QR login flow
+
+WhatsApp uses a similar QR-based flow:
+
+<Steps>
+  <Step title="Start QR session">
+    `POST /api/v1/channels/whatsapp/qr-start` — Returns a QR data URL and an account ID.
+  </Step>
+  <Step title="Poll for scan">
+    `POST /api/v1/channels/whatsapp/qr-wait` — Pass the `accountId` and poll until `connected` is `true`.
+  </Step>
+  <Step title="Finalize connection">
+    `POST /api/v1/channels/whatsapp/connect` — Pass the `accountId`.
+  </Step>
+</Steps>
+
+### POST /api/v1/channels/whatsapp/qr-start
+
+**Response 200**
+
+<ResponseField name="qrDataUrl" type="string">Base64 data URL for the QR code image.</ResponseField>
+<ResponseField name="accountId" type="string" required>Account ID to use in subsequent steps.</ResponseField>
+<ResponseField name="alreadyLinked" type="boolean" required>Whether a prior session is already linked. Defaults to `false`.</ResponseField>
+<ResponseField name="message" type="string" required>Status message.</ResponseField>
+
+### POST /api/v1/channels/whatsapp/qr-wait
+
+**Request body**
+
+<ParamField body="accountId" type="string" required>
+  Account ID returned by `qr-start`.
+</ParamField>
+
+**Response 200**
+
+<ResponseField name="connected" type="boolean" required>Whether login completed.</ResponseField>
+<ResponseField name="message" type="string" required>Status message.</ResponseField>
+<ResponseField name="accountId" type="string" required>WhatsApp account ID.</ResponseField>
+
+### POST /api/v1/channels/whatsapp/connect
+
+**Request body**
+
+<ParamField body="accountId" type="string" required>
+  WhatsApp account ID.
+</ParamField>
+
+**Response 200** — The connected channel object.
+
+**Response 409** — Connection failed.

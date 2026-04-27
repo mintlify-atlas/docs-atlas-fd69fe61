@@ -1,0 +1,89 @@
+---
+title: "Create custom skills for your Agent"
+description: "Build your own Nexu skills using a SKILL.md file with YAML frontmatter. Custom skills load through the same SkillHub pipeline as official skills."
+---
+
+Custom skills let you extend your Agent with capabilities that are not in the official catalog. A skill is a directory containing a single `SKILL.md` file. The frontmatter defines the skill's metadata and plugin requirements; the body is the prompt injected into the Agent when the skill is active.
+
+## Skill structure
+
+A skill lives in a directory named after the skill's slug. The directory must contain a `SKILL.md` file:
+
+```
+my-skill/
+└── SKILL.md
+```
+
+Official skills follow this layout inside the `nexu-skills/skills/` directory. For example:
+
+```
+nexu-skills/
+└── skills/
+    ├── feishu-bitable/
+    │   └── SKILL.md
+    ├── feishu-calendar/
+    │   └── SKILL.md
+    └── my-skill/
+        └── SKILL.md
+```
+
+## SKILL.md frontmatter fields
+
+The frontmatter block at the top of `SKILL.md` is parsed by the controller using the `skillFrontmatterSchema`. All fields are listed below.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `name` | string | Yes | Human-readable skill name shown in the UI. |
+| `description` | string | Yes | Short description shown in the skill card. |
+| `tag` | string | No | Category tag. One of: `office-collab`, `file-knowledge`, `creative-design`, `biz-analysis`, `av-generation`, `info-content`, `dev-tools`. Defaults to `dev-tools`. |
+| `icon` | string | No | Icon name from the Lucide icon set. Defaults to `Sparkles`. |
+| `source` | string | No | One of `official`, `community`, or `custom`. Defaults to `custom`. |
+| `prompt` | string | No | Short prompt string. For longer prompts, use the SKILL.md body instead. |
+| `examples` | string[] | No | Example user messages that demonstrate when the skill applies. |
+| `requires.plugins` | string[] | No | OpenClaw plugin IDs required by this skill (e.g. `@larksuite/openclaw-lark`). |
+| `requires.tools` | string[] | No | Additional tool IDs required by this skill. |
+
+## Example SKILL.md
+
+The following example is based on the `feishu-bitable` official skill:
+
+```markdown
+---
+name: feishu-bitable
+description: |
+  Tools for creating, querying, editing, and managing Feishu Bitable databases.
+  Supports 27 field types, advanced filtering, batch operations, and view management.
+tag: office-collab
+icon: Table2
+source: official
+prompt: Help me manage Feishu Bitable databases
+examples:
+  - Create a customer management Bitable
+  - Query records where status is "In Progress"
+  - Batch import data into a Bitable table
+requires:
+  plugins:
+    - "@larksuite/openclaw-lark"
+---
+
+# My Skill
+
+The body of SKILL.md is the full prompt injected into the Agent when this skill is active.
+Write detailed instructions, tool usage guidance, and constraints here.
+```
+
+## Where to put custom skills
+
+Custom skills can be loaded from the local filesystem via the SkillHub import flow:
+
+1. Package your skill directory as a `.zip` file (max 50 MB).
+2. In the Nexu client, go to **Skills** → **Import** and upload the zip.
+3. The controller extracts the skill, installs any dependencies, and makes it available immediately.
+
+<Note>
+  Official skills live in `nexu-skills/skills/` in the Nexu source repository. Each skill is a directory named after its slug, containing at minimum a `SKILL.md` file. You can use any official skill as a reference for structure and frontmatter conventions.
+</Note>
+
+<Tip>
+  Keep the `prompt` frontmatter field short and put detailed instructions in the SKILL.md body. The controller uses the body as the primary prompt content when the skill is active.
+</Tip>

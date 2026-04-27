@@ -1,0 +1,58 @@
+---
+title: "Nexu skill catalog: browse and install skills"
+description: "Browse official Nexu skills in the in-app hub, install in one click, and use them in chat immediately. No restart needed after installation."
+---
+
+The Nexu skill hub gives you a searchable catalog of official skills. Each skill adds a focused set of capabilities to your Agent — for example, creating Feishu documents or querying a Bitable database. Installing a skill takes a few seconds, and it activates immediately.
+
+## How to install a skill
+
+<Steps>
+  <Step title="Open the Skills page">
+    Click **Skills** in the left sidebar of the Nexu client to enter the skill hub.
+  </Step>
+  <Step title="Find a skill">
+    Switch to the **Explore** tab to see all available skills. You can filter by category or search by keyword.
+  </Step>
+  <Step title="Install">
+    Click **Install** on the skill card. Nexu downloads and installs the skill in the background.
+  </Step>
+  <Step title="Confirm in Yours tab">
+    Switch to the **Yours** tab to verify the skill appears in your installed list. You can enable or disable any skill from here.
+  </Step>
+  <Step title="Use it in chat">
+    Describe what you need in a channel conversation. Your Agent automatically selects the right skill for the task.
+  </Step>
+</Steps>
+
+## Available skills
+
+All official skills require the `@larksuite/openclaw-lark` plugin, which is bundled with Nexu.
+
+| Skill | Description | Category |
+| --- | --- | --- |
+| `feishu-bitable` | Create, query, edit, and manage Feishu Bitable databases. Supports 27 field types, advanced filtering, batch operations, and view management. | Office & collaboration |
+| `feishu-calendar` | Manage Feishu calendar events, attendees, free/busy queries, and RSVP status. | Office & collaboration |
+| `feishu-create-doc` | Create new Feishu cloud documents from Lark-flavored Markdown. Supports personal space, folder, wiki node, and wiki space targets. | Files & knowledge |
+| `feishu-fetch-doc` | Fetch and read Feishu cloud document content as Markdown, including images, files, and whiteboards. | Files & knowledge |
+| `feishu-im-read` | Read group chat and direct message history, search messages across conversations, and download media from messages. | Office & collaboration |
+| `feishu-task` | Create, query, update, and complete Feishu tasks and task lists. Supports assignees, followers, and due dates. | Office & collaboration |
+| `feishu-troubleshoot` | Diagnose Feishu plugin issues. Includes a FAQ for common problems and the `/feishu_doctor` diagnostic command for deep permission analysis. | Dev tools |
+| `feishu-update-doc` | Update Feishu cloud documents using seven modes: append, overwrite, locate-and-replace, full-text replace, insert before, insert after, and delete. | Files & knowledge |
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="Do I need to restart the Agent after installing a skill?">
+    No. Skills are hot-loaded and become available immediately after installation. The Agent does not need to restart.
+  </Accordion>
+  <Accordion title="How do I uninstall a skill?">
+    Go to the **Yours** tab and click **Uninstall** next to the skill you want to remove. The skill is deactivated immediately.
+  </Accordion>
+  <Accordion title="Can I install skills that are not in the catalog?">
+    Yes. Nexu supports custom skills that you build and load locally. See [Create custom skills](/skills/custom) for instructions.
+  </Accordion>
+  <Accordion title="Can I have a skill enabled for only one Agent?">
+    Yes. Skills can be installed at the workspace scope (tied to a specific agent) or at the global scope. When installing from the catalog UI, the scope depends on the current agent context.
+  </Accordion>
+</AccordionGroup>

@@ -1,0 +1,144 @@
+---
+title: "Contribute to Nexu open source"
+description: "Learn how to report bugs, propose features, and contribute code or documentation to the Nexu open-source project. Covers branching, commit style, and PR format."
+---
+
+Nexu is open source and we welcome contributions of all kinds — bug reports, feature ideas, code fixes, and documentation improvements. This guide covers everything you need to make a contribution that gets merged quickly.
+
+## Ways to contribute
+
+<CardGroup cols={2}>
+  <Card title="Bug reports" icon="bug">
+    Open a GitHub Issue with reproducible steps, your OS and Nexu version, and relevant log output. Redact any secrets before pasting.
+  </Card>
+  <Card title="Feature ideas" icon="lightbulb">
+    Start a [GitHub Discussion](https://github.com/nexu-io/nexu/discussions) or Issue before writing code so maintainers can align on direction.
+  </Card>
+  <Card title="Code contributions" icon="code">
+    Fix bugs, implement features, or improve tests. Follow the steps below to get your changes reviewed and merged.
+  </Card>
+  <Card title="Documentation" icon="book-open">
+    Fix typos, clarify explanations, add screenshots, or improve translations (English and Chinese when both exist).
+  </Card>
+</CardGroup>
+
+<Tip>
+  Looking for a low-friction entry point? Browse the [good-first-issue label](https://github.com/nexu-io/nexu/labels/good-first-issue) on GitHub — these are tasks maintainers have tagged as approachable for first-time contributors.
+</Tip>
+
+## Code contribution steps
+
+<Steps>
+  <Step title="Search Issues and Discussions first">
+    Check [Issues](https://github.com/nexu-io/nexu/issues) and [Discussions](https://github.com/nexu-io/nexu/discussions) for existing reports or proposals that match what you plan to do. For non-trivial changes, open an Issue first (or comment on an existing one) to agree on direction before investing time in a PR.
+  </Step>
+
+  <Step title="Fork and create a branch">
+    Fork the repo on GitHub and clone your fork locally. Create a short-lived branch off `main` using a clear prefix:
+
+    ```bash
+    git checkout -b feat/feishu-webhook
+    # or
+    git checkout -b fix/login-validation
+    # or
+    git checkout -b chore/update-deps
+    ```
+
+    Branch naming convention: `feat/...`, `fix/...`, `chore/...`.
+  </Step>
+
+  <Step title="Set up the dev environment">
+    Follow the [local setup guide](/dev/local-setup) to install dependencies and start the dev stack before making changes.
+  </Step>
+
+  <Step title="Make your changes">
+    Keep scope tight — one logical change per PR. Avoid drive-by reformats across the entire repo. Never commit tokens, API keys, or credentials; use env vars and local-only config files instead.
+  </Step>
+
+  <Step title="Run checks before pushing">
+    Run these commands from the repo root before opening your PR:
+
+    ```bash
+    pnpm typecheck
+    pnpm lint
+    pnpm test
+    ```
+
+    If you touched production build paths, also run:
+
+    ```bash
+    pnpm build
+    pnpm check:esm-imports
+    ```
+  </Step>
+
+  <Step title="Open a pull request">
+    Push your branch and open a PR against `main`. Fill in every section of the PR template (see format below). Link any related Issues using `Fixes #123` or `Closes #123`. Green CI is required before merge unless a maintainer says otherwise.
+  </Step>
+</Steps>
+
+## Commit conventions
+
+Nexu follows [Conventional Commits](https://www.conventionalcommits.org/) so history and changelogs stay readable. Use the imperative mood (`add`, `fix` — not `added` / `fixed`) and split unrelated changes into separate commits.
+
+| Prefix | When to use |
+| --- | --- |
+| `feat:` | New user-facing feature |
+| `fix:` | Bug fix |
+| `docs:` | Documentation-only change |
+| `chore:` | Tooling, deps, CI — invisible to end users; excluded from release notes |
+| `refactor:` | Behavior-preserving code restructuring |
+
+<Note>
+  Never append `Co-Authored-By:` trailers to commit messages. Documentation-only changes must use `docs:` for both commit title and PR title.
+</Note>
+
+## PR format
+
+When creating a pull request, follow the `.github/pull_request_template.md` structure:
+
+<AccordionGroup>
+  <Accordion title="What">
+    A short description of the change — what was added, fixed, or removed.
+  </Accordion>
+  <Accordion title="Why">
+    The motivation. Link the related Issue or Discussion.
+  </Accordion>
+  <Accordion title="How">
+    How to test or verify the change locally. Include screenshots or screen recordings for UI changes.
+  </Accordion>
+  <Accordion title="Affected areas">
+    List the packages, routes, or UI surfaces touched by this PR.
+  </Accordion>
+  <Accordion title="Checklist">
+    Confirm that `pnpm typecheck`, `pnpm lint`, and `pnpm test` all pass, that no credentials were committed, and that the PR scope is limited to one logical change.
+  </Accordion>
+</AccordionGroup>
+
+## Code style
+
+Nexu uses [Biome](https://biomejs.dev/) as the single source of truth for formatting and most lint rules (`biome.json` at the repo root).
+
+| Rule | Setting |
+| --- | --- |
+| Indentation | 2 spaces |
+| Quotes | Double quotes |
+| Semicolons | Always |
+| File names | `kebab-case` |
+| Type names | `PascalCase` |
+| Variable names | `camelCase` |
+
+A pre-commit hook runs Biome automatically on staged `*.ts`, `*.tsx`, `*.js`, `*.jsx`, and `*.json` files. It is installed by `pnpm prepare` (runs automatically after `pnpm install`). You can also set it manually:
+
+```bash
+git config core.hooksPath scripts
+```
+
+## CI expectations
+
+- **Code PRs** — the `ci.yml` workflow runs `typecheck`, `pnpm lint`, `pnpm build`, and `pnpm check:esm-imports`. PRs that only change files under `docs/` skip this workflow.
+- **Docs PRs** — `docs-ci.yml` builds the docs site when `docs/` or `CONTRIBUTING.md` changes.
+
+## Contributor rewards
+
+We recognize contributors in release notes and periodically highlight impactful contributions in our community channels. Questions and discussion are always welcome in [GitHub Discussions](https://github.com/nexu-io/nexu/discussions).

@@ -1,0 +1,116 @@
+{
+  "projectType": "saas",
+  "projectName": "Nexu",
+  "projectDescription": "An open-source desktop client that connects AI Agents (via OpenClaw) to WeChat, Feishu, Slack, Discord, and other messaging platforms — with built-in multi-model support, BYOK, OAuth, and a local-first skill system.",
+  "theme": "palm",
+  "primaryColor": "#04242c",
+  "lightColor": null,
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "concepts"
+            ]
+          },
+          {
+            "group": "Channels",
+            "pages": [
+              "channels/overview",
+              "channels/feishu",
+              "channels/slack",
+              "channels/discord",
+              "channels/wechat",
+              "channels/other"
+            ]
+          },
+          {
+            "group": "Models & Skills",
+            "pages": [
+              "models/overview",
+              "models/byok",
+              "models/oauth",
+              "skills/overview",
+              "skills/catalog",
+              "skills/custom"
+            ]
+          },
+          {
+            "group": "Help",
+            "pages": [
+              "troubleshooting",
+              "faq",
+              "community"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Developer Guide",
+        "groups": [
+          {
+            "group": "Contributing",
+            "pages": [
+              "dev/contributing",
+              "dev/local-setup",
+              "dev/architecture"
+            ]
+          },
+          {
+            "group": "Skills Development",
+            "pages": [
+              "dev/skills-authoring",
+              "dev/skills-reference"
+            ]
+          },
+          {
+            "group": "API Reference",
+            "pages": [
+              "dev/api-overview",
+              "dev/api-bots",
+              "dev/api-channels",
+              "dev/api-models",
+              "dev/api-skills"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "One-click desktop install — no CLI or env setup required",
+    "Built-in channel integrations: WeChat, Feishu, Slack, Discord, and more",
+    "Multi-model support with Nexu Official (managed) and BYOK (Anthropic, OpenAI, Google AI, xAI, custom)",
+    "OAuth login for MiniMax, OpenAI Codex, and GLM (no API key copy-paste)",
+    "Local-first, private: all data stays on your machine",
+    "Hot-loadable skill catalog with one-click installation",
+    "Feishu Skills built-in (Bitable, Calendar, Docs, Tasks, IM, and more)",
+    "Mobile-ready: chat with your Agent via phone through connected IM channels",
+    "Open-source MIT license with contributor rewards program"
+  ],
+  "publicApiSurface": [
+    "GET /api/v1/bots — list all bots",
+    "POST /api/v1/bots — create a bot",
+    "GET /api/v1/bots/{botId} — get bot by ID",
+    "PUT /api/v1/bots/{botId} — update bot",
+    "DELETE /api/v1/bots/{botId} — delete bot",
+    "GET /api/v1/channels — list channels",
+    "POST /api/v1/channels/{channelId}/connect/slack — connect Slack",
+    "POST /api/v1/channels/{channelId}/connect/feishu — connect Feishu",
+    "POST /api/v1/channels/{channelId}/connect/discord — connect Discord",
+    "POST /api/v1/channels/{channelId}/connect/wechat — connect WeChat (QR flow)",
+    "GET /api/v1/models — list available models",
+    "GET /api/v1/models/providers — list model providers",
+    "POST /api/v1/models/providers/{providerId}/verify — verify BYOK provider",
+    "GET /api/v1/skillhub/catalog — browse skill catalog",
+    "POST /api/v1/skillhub/install — install a skill",
+    "POST /api/v1/skillhub/uninstall — uninstall a skill",
+    "GET /api/v1/skillhub/installed — list installed skills"
+  ]
+}

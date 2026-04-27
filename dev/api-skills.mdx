@@ -1,0 +1,279 @@
+---
+title: "SkillHub API: browse, install, and manage skills"
+description: "REST endpoints for browsing the Nexu skill catalog, installing and uninstalling skills, importing custom skill zips, and monitoring the install queue."
+---
+
+SkillHub is the skill management layer of the Nexu controller. The API lets you browse the public skill catalog, list installed skills, queue installs, uninstall skills, and import custom skills from zip archives. Installs are asynchronous — skills are added to a queue and processed in the background. Use the queue endpoint to poll progress.
+
+## Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/v1/skillhub/catalog` | Get the full skill catalog and install state |
+| `GET` | `/api/v1/skillhub/skills/{slug}` | Get skill detail |
+| `POST` | `/api/v1/skillhub/install` | Queue a skill for installation |
+| `POST` | `/api/v1/skillhub/uninstall` | Uninstall a skill |
+| `POST` | `/api/v1/skillhub/cancel` | Cancel or dismiss a queued install |
+| `POST` | `/api/v1/skillhub/refresh` | Refresh the catalog from the remote source |
+| `POST` | `/api/v1/skillhub/import` | Import a custom skill from a zip file |
+
+---
+
+## Queue item status values
+
+Install queue items progress through the following states:
+
+| Status | Description |
+|---|---|
+| `queued` | Waiting in the queue |
+| `downloading` | Downloading the skill package |
+| `installing-deps` | Running npm dependency installation |
+| `done` | Successfully installed |
+| `failed` | Install failed — check `error` and `errorCode` |
+
+## Error codes
+
+| Code | Description |
+|---|---|
+| `skill_not_found` | The skill slug does not exist in the catalog |
+| `rate_limit` | Download rate limit reached |
+| `npm_missing` | npm is not available on this machine |
+| `deps_install_failed` | npm dependency installation failed |
+| `unknown` | Unclassified error |
+
+---
+
+## GET /api/v1/skillhub/catalog
+
+Get the full skill catalog including install state and the current install queue. This is the primary endpoint for rendering the SkillHub UI.
+
+**Response 200**
+
+<ResponseField name="skills" type="object[]" required>
+  Array of skills available in the catalog.
+  <Expandable title="skill properties">
+    <ResponseField name="slug" type="string" required>Unique skill identifier, lowercase alphanumeric and hyphens.</ResponseField>
+    <ResponseField name="name" type="string" required>Display name.</ResponseField>
+    <ResponseField name="description" type="string" required>Short description.</ResponseField>
+    <ResponseField name="downloads" type="number" required>Download count.</ResponseField>
+    <ResponseField name="stars" type="number" required>Star count.</ResponseField>
+    <ResponseField name="tags" type="string[]" required>Categorisation tags.</ResponseField>
+    <ResponseField name="version" type="string" required>Current published version.</ResponseField>
+    <ResponseField name="updatedAt" type="string" required>ISO 8601 last-updated timestamp.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="installedSlugs" type="string[]" required>
+  Flat list of installed skill slugs.
+</ResponseField>
+
+<ResponseField name="installedSkills" type="object[]" required>
+  Detailed list of installed skills.
+  <Expandable title="installed skill properties">
+    <ResponseField name="slug" type="string" required>Skill slug.</ResponseField>
+    <ResponseField name="source" type='"managed" | "custom" | "workspace" | "user"' required>How the skill was installed.</ResponseField>
+    <ResponseField name="name" type="string" required>Display name.</ResponseField>
+    <ResponseField name="description" type="string" required>Short description.</ResponseField>
+    <ResponseField name="installedAt" type="string | null" required>ISO 8601 install timestamp.</ResponseField>
+    <ResponseField name="agentId" type="string | null" required>Bot ID for workspace-scoped skills. `null` for global installs.</ResponseField>
+    <ResponseField name="agentName" type="string | null" required>Display name of the bot for workspace-scoped skills.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="meta" type="object | null" required>
+  Catalog metadata.
+  <Expandable title="meta properties">
+    <ResponseField name="version" type="string" required>Catalog version string.</ResponseField>
+    <ResponseField name="updatedAt" type="string" required>ISO 8601 timestamp of last catalog refresh.</ResponseField>
+    <ResponseField name="skillCount" type="number" required>Total number of skills in the catalog.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="queue" type="object[]" required>
+  Current install queue.
+  <Expandable title="queue item properties">
+    <ResponseField name="slug" type="string" required>Skill slug being installed.</ResponseField>
+    <ResponseField name="source" type='"managed" | "custom" | "workspace" | "user"' required>Install source.</ResponseField>
+    <ResponseField name="status" type='"queued" | "downloading" | "installing-deps" | "done" | "failed"' required>Current status.</ResponseField>
+    <ResponseField name="position" type="number" required>Position in the queue (0-indexed).</ResponseField>
+    <ResponseField name="error" type="string | null" required>Error message if `status` is `failed`.</ResponseField>
+    <ResponseField name="errorCode" type='"skill_not_found" | "rate_limit" | "npm_missing" | "deps_install_failed" | "unknown" | null' required>Machine-readable error code.</ResponseField>
+    <ResponseField name="retries" type="number" required>Number of retry attempts so far.</ResponseField>
+    <ResponseField name="enqueuedAt" type="string" required>ISO 8601 timestamp when the item was enqueued.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+```bash
+curl http://localhost:<port>/api/v1/skillhub/catalog \
+  -H "Authorization: Bearer <GATEWAY_TOKEN>"
+```
+
+---
+
+## GET /api/v1/skillhub/skills/{slug}
+
+Get full detail for a single skill, including install state and file listing.
+
+**Path parameters**
+
+<ParamField path="slug" type="string" required>
+  The skill slug. Lowercase alphanumeric and hyphens.
+</ParamField>
+
+**Query parameters**
+
+<ParamField query="source" type='"managed" | "custom" | "workspace" | "user"'>
+  Filter to a specific install source. Optional.
+</ParamField>
+
+<ParamField query="agentId" type="string">
+  Required when `source` is `workspace` to identify the correct bot-scoped install.
+</ParamField>
+
+**Response 200**
+
+<ResponseField name="slug" type="string" required>Skill slug.</ResponseField>
+<ResponseField name="name" type="string" required>Display name.</ResponseField>
+<ResponseField name="description" type="string" required>Short description.</ResponseField>
+<ResponseField name="downloads" type="number" required>Download count.</ResponseField>
+<ResponseField name="stars" type="number" required>Star count.</ResponseField>
+<ResponseField name="tags" type="string[]" required>Tags.</ResponseField>
+<ResponseField name="version" type="string" required>Version string.</ResponseField>
+<ResponseField name="updatedAt" type="string" required>ISO 8601 last-updated timestamp.</ResponseField>
+<ResponseField name="installed" type="boolean" required>Whether this skill is installed.</ResponseField>
+<ResponseField name="installedSource" type='"managed" | "custom" | "workspace" | "user" | null' required>Source of the installed copy. `null` if not installed.</ResponseField>
+<ResponseField name="agentId" type="string | null" required>Bot ID for workspace-scoped installs.</ResponseField>
+<ResponseField name="uninstallable" type="boolean" required>Whether this install can be removed via the API.</ResponseField>
+<ResponseField name="skillContent" type="string | null" required>Skill content string. Currently always `null`.</ResponseField>
+<ResponseField name="files" type="string[]" required>File listing. Currently always empty.</ResponseField>
+
+**Response 404** — `{ message: "Skill not found" }`
+
+---
+
+## POST /api/v1/skillhub/install
+
+Queue a skill for asynchronous installation. Returns immediately with queue position.
+
+**Request body**
+
+<ParamField body="slug" type="string" required>
+  The skill slug to install. Must match `/^[a-z0-9][a-z0-9-]{0,127}$/`.
+</ParamField>
+
+<ParamField body="source" type='"managed" | "custom" | "workspace" | "user"'>
+  Install source. Optional.
+</ParamField>
+
+<ParamField body="agentId" type="string | null">
+  Bot ID for workspace-scoped installs. Required when `source` is `workspace`.
+</ParamField>
+
+**Response 200**
+
+<ResponseField name="ok" type="boolean" required>Always `true` on success.</ResponseField>
+<ResponseField name="queued" type="boolean">Always `true` — the install is asynchronous.</ResponseField>
+<ResponseField name="slug" type="string">The enqueued skill slug.</ResponseField>
+<ResponseField name="status" type='"queued" | "downloading" | "installing-deps" | "done" | "failed"'>Current queue item status.</ResponseField>
+<ResponseField name="position" type="number">Position in the install queue.</ResponseField>
+
+```bash
+curl -X POST http://localhost:<port>/api/v1/skillhub/install \
+  -H "Authorization: Bearer <GATEWAY_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"slug": "web-search"}'
+```
+
+---
+
+## POST /api/v1/skillhub/uninstall
+
+Uninstall a skill. Triggers an OpenClaw runtime sync after successful removal.
+
+**Request body**
+
+<ParamField body="slug" type="string" required>
+  The skill slug to uninstall. Must match `/^[a-z0-9][a-z0-9-]{0,127}$/`.
+</ParamField>
+
+<ParamField body="source" type='"managed" | "custom" | "workspace" | "user"'>
+  Source of the install to remove. Optional when unambiguous.
+</ParamField>
+
+<ParamField body="agentId" type="string | null">
+  Required when `source` is `workspace`.
+</ParamField>
+
+**Response 200**
+
+<ResponseField name="ok" type="boolean" required>Whether uninstall succeeded.</ResponseField>
+<ResponseField name="error" type="string">Error message if `ok` is `false`.</ResponseField>
+
+```bash
+curl -X POST http://localhost:<port>/api/v1/skillhub/uninstall \
+  -H "Authorization: Bearer <GATEWAY_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"slug": "web-search"}'
+```
+
+---
+
+## POST /api/v1/skillhub/cancel
+
+Cancel a queued install or dismiss a failed queue item.
+
+**Request body**
+
+<ParamField body="slug" type="string" required>
+  The skill slug to cancel or dismiss.
+</ParamField>
+
+**Response 200**
+
+<ResponseField name="ok" type="boolean" required>Always `true`.</ResponseField>
+<ResponseField name="cancelled" type="boolean" required>`true` if an item was found and cancelled; `false` if no matching queued item existed.</ResponseField>
+
+---
+
+## POST /api/v1/skillhub/refresh
+
+Refresh the skill catalog from the remote source.
+
+**Response 200**
+
+<ResponseField name="ok" type="boolean" required>Whether the refresh succeeded.</ResponseField>
+<ResponseField name="skillCount" type="number" required>Number of skills in the updated catalog.</ResponseField>
+<ResponseField name="error" type="string">Error message if `ok` is `false`.</ResponseField>
+
+---
+
+## POST /api/v1/skillhub/import
+
+Import a custom skill from a `.zip` archive. Maximum file size is 50 MB.
+
+**Request body** — `multipart/form-data`
+
+<ParamField body="file" type="file" required>
+  A `.zip` file containing the custom skill. Must be under 50 MB.
+</ParamField>
+
+**Response 200**
+
+<ResponseField name="ok" type="boolean" required>Whether the import succeeded.</ResponseField>
+<ResponseField name="slug" type="string">The slug assigned to the imported skill.</ResponseField>
+
+**Response 400** — Import rejected (invalid zip, too large, dependency install failure).
+
+<ResponseField name="ok" type="boolean" required>Always `false`.</ResponseField>
+<ResponseField name="error" type="string">Human-readable error message.</ResponseField>
+<ResponseField name="errorCode" type='"skill_not_found" | "rate_limit" | "npm_missing" | "deps_install_failed" | "unknown"'>Machine-readable error code.</ResponseField>
+
+```bash
+curl -X POST http://localhost:<port>/api/v1/skillhub/import \
+  -H "Authorization: Bearer <GATEWAY_TOKEN>" \
+  -F "file=@./my-skill.zip"
+```
+
+<Warning>
+  Importing a custom skill runs `npm install` for any declared dependencies. Ensure npm is available on the machine running the controller. If npm is missing, the import returns `errorCode: "npm_missing"`.
+</Warning>

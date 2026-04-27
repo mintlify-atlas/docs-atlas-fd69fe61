@@ -1,81 +1,105 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
-icon: 'rocket'
+title: "Get started with Nexu in under five minutes"
+description: "Download Nexu, choose a model, connect a messaging channel, and send your first message to your AI Agent — all without touching a terminal."
 ---
 
-## Get started in three steps
+This guide walks you through everything from downloading the Nexu desktop app to sending your first message to your AI Agent inside a real messaging platform. The whole flow takes under five minutes for most users. By the end you'll have a running Agent reachable from your phone via Feishu, Slack, Discord, or WeChat.
 
-Get your documentation site running locally and make your first customization.
+<Steps>
+  <Step title="Download and install Nexu">
+    Download the installer for your platform from [nexu.io](https://nexu.io) or from the [GitHub Releases page](https://github.com/nexu-io/nexu/releases).
 
-### Step 1: Set up your local environment
+    | Platform | Download |
+    |---|---|
+    | macOS (Apple Silicon) | [nexu.io](https://nexu.io) · [GitHub Releases](https://github.com/nexu-io/nexu/releases) |
+    | macOS (Intel) | [nexu.io](https://nexu.io) · [GitHub Releases](https://github.com/nexu-io/nexu/releases) |
+    | Windows | [nexu.io](https://nexu.io) · [GitHub Releases](https://github.com/nexu-io/nexu/releases) |
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+    Once downloaded, double-click the installer. No terminal, no environment variables, no dependency setup — Nexu is ready to use as soon as installation finishes.
 
-### Step 2: Deploy your changes
+    <Info>
+      **System requirements:** macOS 12+ (Apple Silicon or Intel) or Windows 10+. Approximately 500 MB of free storage.
+    </Info>
+  </Step>
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+  <Step title="Choose a model on first launch">
+    When Nexu opens for the first time, click **Settings** in the left sidebar to open the AI Model Providers page. You have two options:
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+    <Tabs>
+      <Tab title="Nexu Official (recommended for new users)">
+        Select **Nexu Official** from the provider list, then click **Sign in to Nexu**.
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+        Once signed in, high-quality managed models are available immediately — no API key required. Use the **Nexu Bot Model** dropdown at the top of Settings to pick the active model.
+      </Tab>
+      <Tab title="BYOK — Bring Your Own Key">
+        Select a provider from the list — **Anthropic**, **OpenAI**, **Google AI**, **xAI**, or **Custom** for any OpenAI-compatible endpoint.
 
-### Step 3: Go live
+        1. Paste your API key into the **API Key** field.
+        2. Optionally set an **API Proxy URL** if you need a custom gateway.
+        3. Click **Save**. Nexu verifies the key and loads your available models automatically.
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+        You can configure multiple BYOK providers at the same time and switch between them using the model selector without affecting any existing conversations.
 
-## Next steps
+        <Tip>
+          MiniMax, OpenAI Codex, and GLM (Z.AI Coding Plan) support OAuth login — click **Authorize** instead of pasting a key. See [OAuth models](/models/oauth) for details.
+        </Tip>
+      </Tab>
+    </Tabs>
+  </Step>
 
-Now that you have your docs running, explore these key features:
+  <Step title="Connect a messaging channel">
+    With a model configured, pick a channel to connect your Agent to. Each channel has a short setup flow inside the Nexu dashboard.
+
+    <Tabs>
+      <Tab title="Feishu">
+        Feishu is the quickest channel to set up — you only need an **App ID** and **App Secret** from your Feishu developer console.
+
+        See the full [Feishu setup guide](/channels/feishu) for step-by-step instructions.
+      </Tab>
+      <Tab title="Slack">
+        Nexu generates a Slack app manifest for you. Paste it into the Slack App Directory to create your app in one step, then authorize it in your workspace.
+
+        See the full [Slack setup guide](/channels/slack) for step-by-step instructions.
+      </Tab>
+      <Tab title="Discord">
+        You'll need an **Application ID** and **Bot Token** from the Discord Developer Portal. Nexu walks you through the required bot permissions.
+
+        See the full [Discord setup guide](/channels/discord) for step-by-step instructions.
+      </Tab>
+      <Tab title="WeChat">
+        Nexu works with the WeChat 8.0.7 OpenClaw plugin. Click **Connect** inside Nexu, then scan the QR code with the WeChat app on your phone.
+
+        See the full [WeChat setup guide](/channels/wechat) for step-by-step instructions.
+      </Tab>
+    </Tabs>
+
+    Once the channel credentials are saved, Nexu recompiles the Agent configuration and the OpenClaw runtime reloads automatically. No restart needed.
+  </Step>
+
+  <Step title="Start chatting">
+    Click **Chat** in the Nexu sidebar to open a conversation and verify your Agent responds correctly before switching to your phone.
+
+    Then open the messaging app you connected — Feishu, Slack, Discord, or WeChat — and send a message to your Agent. As long as Nexu is running on your desktop, your Agent is online and reachable from any device.
+
+    <Tip>
+      Want to give your Agent extra capabilities? Browse the [Skills catalog](/skills/catalog) to install one-click skills for Feishu Bitable, Docs, Calendar, and more, or read [Custom skills](/skills/custom) to build your own.
+    </Tip>
+  </Step>
+</Steps>
+
+## What's next
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Key concepts" icon="lightbulb" href="/concepts">
+    Learn how Agents, Channels, Models, and Skills fit together.
+  </Card>
+  <Card title="Channel guides" icon="plug" href="/channels/overview">
+    Detailed setup instructions for every supported platform.
+  </Card>
+  <Card title="Model configuration" icon="brain" href="/models/overview">
+    Switch models, add providers, and configure proxy settings.
+  </Card>
+  <Card title="Skills catalog" icon="puzzle-piece" href="/skills/catalog">
+    Install pre-built skills to extend your Agent's capabilities.
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>

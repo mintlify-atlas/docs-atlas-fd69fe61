@@ -1,133 +1,81 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
-icon: 'star'
+title: "Nexu: Connect Your AI Agent to WeChat, Feishu & Slack"
+description: "Nexu bridges OpenClaw AI Agents to WeChat, Feishu, Slack, and Discord in one click. Local-first, BYOK, MIT license — no infrastructure required."
 ---
 
-## Setting up
+Nexu puts your AI Agent inside the messaging apps you already use. Download the desktop client, configure a model, connect a channel, and your Agent is online 24/7 — reachable from your phone via WeChat, Feishu, Slack, or Discord. All data stays on your machine.
 
-Get your documentation site up and running in minutes.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Get from download to your first Agent conversation in under five minutes.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Key Concepts" icon="lightbulb" href="/concepts">
+    Understand Agents, Channels, Models, and Skills before you dive in.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Connect a Channel" icon="plug" href="/channels/overview">
+    Set up Feishu, Slack, Discord, WeChat, or another supported platform.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="Configure Models" icon="brain" href="/models/overview">
+    Use managed Nexu Official models or bring your own API key.
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## How Nexu works
 
-Everything you need to create world-class documentation.
+Nexu runs a local controller on your machine that compiles an AI Agent configuration, connects it to your chosen messaging channels, and keeps everything running in the background. Your Agent processes messages through the OpenClaw runtime and responds — no cloud middleman, no vendor lock-in.
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+<Steps>
+  <Step title="Download and install">
+    Grab the installer for macOS (Apple Silicon or Intel) or Windows from [nexu.io](https://nexu.io). Double-click to install — no terminal required.
+  </Step>
+  <Step title="Choose a model">
+    Sign in with your Nexu account for instant access to managed models, or paste your own API key from Anthropic, OpenAI, Google AI, or any OpenAI-compatible provider.
+  </Step>
+  <Step title="Connect a channel">
+    Pick Feishu, Slack, Discord, WeChat, or another supported platform and complete the short setup flow in the Nexu dashboard.
+  </Step>
+  <Step title="Start chatting">
+    Open your connected app on any device and talk to your Agent. It's online as long as Nexu is running on your desktop.
+  </Step>
+</Steps>
 
-## Make your content agent ready
+## What you can do
 
-Make your docs work for humans and AI agents alike.
+<CardGroup cols={3}>
+  <Card title="WeChat & Feishu" icon="comments" href="/channels/wechat">
+    Connect to China's most popular platforms with QR code or App ID setup.
+  </Card>
+  <Card title="Slack & Discord" icon="slack" href="/channels/slack">
+    One-click Slack app creation via manifest; Discord via Bot Token.
+  </Card>
+  <Card title="Bring Your Own Key" icon="key" href="/models/byok">
+    Use Anthropic, OpenAI, Google AI, xAI, or any OpenAI-compatible endpoint.
+  </Card>
+  <Card title="Skills Catalog" icon="puzzle-piece" href="/skills/catalog">
+    Install one-click skills for Feishu Bitable, Docs, Calendar, Tasks, and more.
+  </Card>
+  <Card title="OAuth Models" icon="shield-check" href="/models/oauth">
+    Log in to MiniMax, Codex, and GLM with one click — no key copy-paste.
+  </Card>
+  <Card title="Local-first privacy" icon="lock" href="/concepts">
+    All config, credentials, and conversation history stay on your machine.
+  </Card>
+</CardGroup>
 
-<Columns cols={2}>
-  <Card
-    title="Prompt component"
-    icon="robot"
-    href="/agent-ready/prompt"
-  >
-    Embed shareable AI prompts readers can copy or open in Cursor.
-  </Card>
-  <Card
-    title="Visibility"
-    icon="eye"
-    href="/agent-ready/visibility"
-  >
-    Show different content to humans and agents reading your docs.
-  </Card>
-  <Card
-    title="Contextual menu"
-    icon="bolt"
-    href="/agent-ready/contextual"
-  >
-    Give readers one-click access to Claude, ChatGPT, Cursor, and more.
-  </Card>
-  <Card
-    title="AI coding tools"
-    icon="wand-magic-sparkles"
-    href="/ai-tools/claude-code"
-  >
-    Set up Claude Code, Cursor, or Windsurf with Mintlify's skill.
-  </Card>
-</Columns>
+## Supported platforms
 
-## Need inspiration?
+| Platform | Status |
+|---|---|
+| Feishu (Lark) | Supported |
+| Slack | Supported |
+| Discord | Supported |
+| WeChat (via OpenClaw plugin) | Supported |
+| WeCom (Enterprise WeChat) | Supported |
+| DingTalk | Supported |
+| Telegram | Supported |
+| WhatsApp | Supported |
+| QQ Bot | Supported |
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+<Note>
+  Nexu is open-source under the MIT license. Contributions are welcome — see the [Developer Guide](/dev/contributing) to get started.
+</Note>

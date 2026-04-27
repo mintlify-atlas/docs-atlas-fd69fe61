@@ -1,0 +1,251 @@
+---
+title: "Models API: list and configure providers"
+description: "REST endpoints for listing available models, reading the provider registry, and configuring bring-your-own-key providers on the local Nexu controller."
+---
+
+The Models API exposes the model and provider layer of the Nexu controller. You can list models currently available to bots, read the full provider registry (all supported providers and their metadata), and manage BYOK (bring-your-own-key) provider configurations. Provider changes trigger an OpenClaw runtime restart so the updated registry takes effect immediately.
+
+## Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/v1/models` | List available models |
+| `GET` | `/api/v1/model-providers/registry` | List the provider registry |
+| `GET` | `/api/v1/model-providers/config` | Get provider config document |
+| `PUT` | `/api/v1/model-providers/config` | Replace provider config document |
+| `POST` | `/api/v1/model-providers/{providerId}/validate` | Validate provider credentials |
+| `POST` | `/api/v1/model-providers/instances/validate` | Validate a provider instance |
+| `GET` | `/api/v1/model-providers/minimax/oauth/status` | MiniMax OAuth status |
+| `POST` | `/api/v1/model-providers/minimax/oauth/login` | Start MiniMax OAuth login |
+| `DELETE` | `/api/v1/model-providers/minimax/oauth/login` | Cancel MiniMax OAuth login |
+| `POST` | `/api/v1/providers/{providerId}/verify` | Verify a BYOK provider |
+| `POST` | `/api/v1/quota/fallback-to-byok` | Trigger fallback to BYOK |
+| `POST` | `/api/v1/quota/restore-managed` | Restore managed (cloud) model |
+
+---
+
+## Supported BYOK provider IDs
+
+The following provider IDs are accepted by the `{providerId}` path parameter on BYOK endpoints:
+
+`anthropic`, `openai`, `google`, `ollama`, `siliconflow`, `ppio`, `nvidia`, `stepfun`, `amazon-bedrock`, `deepseek`, `openrouter`, `mistral`, `xai`, `together`, `huggingface`, `qwen`, `volcengine`, `qianfan`, `vllm`, `byteplus`, `venice`, `github-copilot`, `xiaomi`, `chutes`, `minimax`, `kimi`, `glm`, `moonshot`, `zai`
+
+<Note>
+  The `/api/v1/model-providers/{providerId}/validate` endpoint also accepts custom provider template IDs.
+</Note>
+
+---
+
+## GET /api/v1/models
+
+List all models currently available to bots. This includes models from configured BYOK providers.
+
+**Response 200**
+
+<ResponseField name="models" type="object[]" required>
+  Array of model objects.
+  <Expandable title="model properties">
+    <ResponseField name="id" type="string" required>Unique model identifier as used in bot `modelId`.</ResponseField>
+    <ResponseField name="name" type="string" required>Human-readable model name.</ResponseField>
+    <ResponseField name="provider" type="string" required>Provider ID (e.g. `openai`, `anthropic`).</ResponseField>
+    <ResponseField name="isDefault" type="boolean">Whether this is the default model.</ResponseField>
+    <ResponseField name="description" type="string">Optional description.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+```bash
+curl http://localhost:<port>/api/v1/models \
+  -H "Authorization: Bearer <GATEWAY_TOKEN>"
+```
+
+---
+
+## GET /api/v1/model-providers/registry
+
+List all entries in the provider registry. This returns the static metadata for every supported provider regardless of whether it is configured.
+
+**Response 200**
+
+<ResponseField name="registry" type="object[]" required>
+  Array of provider registry entries.
+  <Expandable title="registry entry properties">
+    <ResponseField name="id" type="string" required>Provider ID.</ResponseField>
+    <ResponseField name="canonicalOpenClawId" type="string" required>The ID used in the OpenClaw runtime config.</ResponseField>
+    <ResponseField name="aliases" type="string[]" required>Alternate IDs accepted by the API.</ResponseField>
+    <ResponseField name="displayName" type="string" required>Human-readable provider name.</ResponseField>
+    <ResponseField name="authModes" type="string[]" required>Supported auth modes (e.g. `api-key`, `oauth`, `token`, `aws-sdk`).</ResponseField>
+    <ResponseField name="apiKind" type="string" required>API protocol family.</ResponseField>
+    <ResponseField name="defaultBaseUrls" type="string[]" required>Default base URLs for this provider.</ResponseField>
+    <ResponseField name="controllerConfigurable" type="boolean">Whether this provider can be configured via the BYOK API.</ResponseField>
+    <ResponseField name="modelsPageVisible" type="boolean">Whether the provider appears in the models UI.</ResponseField>
+    <ResponseField name="supportsCustomBaseUrl" type="boolean">Whether a custom base URL can be set.</ResponseField>
+    <ResponseField name="supportsModelDiscovery" type="boolean">Whether model discovery is supported.</ResponseField>
+    <ResponseField name="signupUrl" type="string">URL to sign up for this provider.</ResponseField>
+    <ResponseField name="apiDocsUrl" type="string">URL to the provider's API key docs.</ResponseField>
+    <ResponseField name="apiKeyPlaceholder" type="string">Example API key format shown in the UI.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+```bash
+curl http://localhost:<port>/api/v1/model-providers/registry \
+  -H "Authorization: Bearer <GATEWAY_TOKEN>"
+```
+
+---
+
+## GET /api/v1/model-providers/config
+
+Retrieve the current persisted model provider configuration document.
+
+**Response 200**
+
+<ResponseField name="config" type="object" required>
+  The full persisted provider configuration. See `persistedModelsConfigSchema` in `packages/shared/src/schemas/model-provider-config.ts` for the full shape.
+</ResponseField>
+
+---
+
+## PUT /api/v1/model-providers/config
+
+Replace the entire provider configuration document. This is a full replacement — omitting a provider removes its configuration. Triggers an OpenClaw runtime restart when the first BYOK provider is added.
+
+**Request body** — The full `persistedModelsConfigSchema` object.
+
+**Response 200**
+
+<ResponseField name="config" type="object" required>The updated configuration document.</ResponseField>
+
+<Warning>
+  This endpoint replaces the complete provider configuration. Partial updates are not supported. Read the current config first with `GET /api/v1/model-providers/config`, modify the result, and PUT it back.
+</Warning>
+
+---
+
+## POST /api/v1/model-providers/{providerId}/validate
+
+Validate API key credentials for a provider without persisting any configuration.
+
+**Path parameters**
+
+<ParamField path="providerId" type="string" required>
+  A BYOK provider ID or custom provider template ID.
+</ParamField>
+
+**Request body**
+
+<ParamField body="apiKey" type="string">
+  API key to validate.
+</ParamField>
+
+<ParamField body="baseUrl" type="string">
+  Custom base URL. Optional; uses the provider default if omitted.
+</ParamField>
+
+**Response 200**
+
+<ResponseField name="valid" type="boolean" required>Whether the credentials are valid.</ResponseField>
+<ResponseField name="models" type="string[]">List of model IDs returned by the provider, if discovery is supported.</ResponseField>
+<ResponseField name="error" type="string">Error message if `valid` is `false`.</ResponseField>
+
+```bash
+curl -X POST http://localhost:<port>/api/v1/model-providers/openai/validate \
+  -H "Authorization: Bearer <GATEWAY_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"apiKey": "sk-..."}'
+```
+
+---
+
+## POST /api/v1/providers/{providerId}/verify
+
+Verify connectivity for a configured BYOK provider. Accepts only IDs from the `supportedByokProviderIds` list.
+
+**Path parameters**
+
+<ParamField path="providerId" type="string" required>
+  A supported BYOK provider ID.
+</ParamField>
+
+**Request body**
+
+<ParamField body="apiKey" type="string">
+  API key to test. Optional.
+</ParamField>
+
+<ParamField body="baseUrl" type="string">
+  Base URL to test against. Optional.
+</ParamField>
+
+**Response 200**
+
+<ResponseField name="valid" type="boolean" required>Whether the provider is reachable and credentials are accepted.</ResponseField>
+<ResponseField name="models" type="string[]">Discovered model IDs.</ResponseField>
+<ResponseField name="error" type="string">Error detail if `valid` is `false`.</ResponseField>
+
+```bash
+curl -X POST http://localhost:<port>/api/v1/providers/anthropic/verify \
+  -H "Authorization: Bearer <GATEWAY_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"apiKey": "sk-ant-api03-..."}'
+```
+
+---
+
+## MiniMax OAuth flow
+
+MiniMax supports OAuth in addition to API key auth. Use the following endpoints to manage the OAuth session.
+
+### GET /api/v1/model-providers/minimax/oauth/status
+
+**Response 200**
+
+<ResponseField name="connected" type="boolean" required>Whether an active OAuth session exists.</ResponseField>
+<ResponseField name="inProgress" type="boolean" required>Whether an OAuth login is in progress.</ResponseField>
+<ResponseField name="region" type='"global" | "cn" | null'>The region of the active session.</ResponseField>
+<ResponseField name="error" type="string | null">Error detail if the last OAuth attempt failed.</ResponseField>
+
+### POST /api/v1/model-providers/minimax/oauth/login
+
+Start a MiniMax OAuth login. Opens a browser window for the user to authorize.
+
+**Request body**
+
+<ParamField body="region" type='"global" | "cn"' required>
+  MiniMax region to authenticate against.
+</ParamField>
+
+**Response 200** — `minimaxOauthStatusResponseSchema` extended with `{ started: true, browserUrl?: string }`.
+
+### DELETE /api/v1/model-providers/minimax/oauth/login
+
+Cancel an in-progress MiniMax OAuth login.
+
+**Response 200** — `minimaxOauthStatusResponseSchema` extended with `{ cancelled: true }`.
+
+---
+
+## POST /api/v1/quota/fallback-to-byok
+
+Trigger an automatic fallback from the managed (cloud) model to a configured BYOK provider when quota is exhausted.
+
+**Response 200**
+
+<ResponseField name="ok" type="boolean" required>Whether the fallback succeeded.</ResponseField>
+<ResponseField name="newModelId" type="string">The model ID that is now active after the fallback.</ResponseField>
+
+---
+
+## POST /api/v1/quota/restore-managed
+
+Restore the default model back to a managed (cloud) model after a BYOK fallback.
+
+**Request body**
+
+<ParamField body="managedModelId" type="string" required>
+  The managed model ID to restore as the default.
+</ParamField>
+
+**Response 200**
+
+<ResponseField name="ok" type="boolean" required>Whether the restore succeeded.</ResponseField>
+<ResponseField name="newModelId" type="string">The model ID now active.</ResponseField>

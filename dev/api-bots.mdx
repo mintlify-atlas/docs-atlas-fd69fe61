@@ -1,0 +1,210 @@
+---
+title: "Bots API: create and manage AI agents"
+description: "REST endpoints for creating, updating, deleting, and controlling the lifecycle of Nexu AI bot agents via the local controller API."
+---
+
+Bots are the core entities in Nexu — each bot is an AI agent with a name, model, system prompt, and lifecycle state. The Bots API lets you create and configure bots, read their current state, and control their runtime status (active, paused). All endpoints are served by the local controller and require a bearer token for authentication.
+
+## Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/v1/bots` | List all bots |
+| `GET` | `/api/v1/bots/{botId}` | Get a single bot |
+| `POST` | `/api/v1/bots` | Create a bot |
+| `PATCH` | `/api/v1/bots/{botId}` | Update a bot |
+| `DELETE` | `/api/v1/bots/{botId}` | Delete a bot |
+| `POST` | `/api/v1/bots/{botId}/pause` | Pause a bot |
+| `POST` | `/api/v1/bots/{botId}/resume` | Resume a paused bot |
+
+---
+
+## GET /api/v1/bots
+
+List all bots.
+
+**Response 200**
+
+<ResponseField name="bots" type="object[]" required>
+  Array of bot objects.
+  <Expandable title="bot properties">
+    <ResponseField name="id" type="string" required>Unique bot identifier (cuid2).</ResponseField>
+    <ResponseField name="name" type="string" required>Display name of the bot.</ResponseField>
+    <ResponseField name="slug" type="string" required>URL-safe identifier, lowercase alphanumeric and hyphens.</ResponseField>
+    <ResponseField name="poolId" type="string | null" required>Pool assignment. `null` if not in a pool.</ResponseField>
+    <ResponseField name="status" type='"active" | "paused" | "deleted"' required>Current lifecycle status.</ResponseField>
+    <ResponseField name="modelId" type="string" required>ID of the model assigned to this bot.</ResponseField>
+    <ResponseField name="systemPrompt" type="string | null" required>System prompt text. `null` if not set.</ResponseField>
+    <ResponseField name="createdAt" type="string" required>ISO 8601 creation timestamp.</ResponseField>
+    <ResponseField name="updatedAt" type="string" required>ISO 8601 last-updated timestamp.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+```bash
+curl http://localhost:<port>/api/v1/bots \
+  -H "Authorization: Bearer <GATEWAY_TOKEN>"
+```
+
+---
+
+## GET /api/v1/bots/{botId}
+
+Get a single bot by ID.
+
+**Path parameters**
+
+<ParamField path="botId" type="string" required>
+  The bot's unique identifier.
+</ParamField>
+
+**Response 200** — Bot object (same shape as the list item above).
+
+**Response 404**
+
+<ResponseField name="message" type="string" required>Error description: `"Bot not found"`.</ResponseField>
+
+```bash
+curl http://localhost:<port>/api/v1/bots/clxyz123 \
+  -H "Authorization: Bearer <GATEWAY_TOKEN>"
+```
+
+---
+
+## POST /api/v1/bots
+
+Create a new bot.
+
+**Request body**
+
+<ParamField body="name" type="string" required>
+  Display name. 1–255 characters.
+</ParamField>
+
+<ParamField body="slug" type="string" required>
+  URL-safe identifier. Lowercase alphanumeric and hyphens, 1–100 characters. Must match `/^[a-z0-9-]+$/`.
+</ParamField>
+
+<ParamField body="systemPrompt" type="string">
+  System prompt text. Optional.
+</ParamField>
+
+<ParamField body="modelId" type="string" default="gpt-4o">
+  Model identifier to assign. Defaults to `gpt-4o`.
+</ParamField>
+
+<ParamField body="poolId" type="string">
+  Pool to assign the bot to. Optional.
+</ParamField>
+
+**Response 200** — The created bot object.
+
+```bash
+curl -X POST http://localhost:<port>/api/v1/bots \
+  -H "Authorization: Bearer <GATEWAY_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Support Bot",
+    "slug": "support-bot",
+    "systemPrompt": "You are a helpful support assistant.",
+    "modelId": "gpt-4o"
+  }'
+```
+
+---
+
+## PATCH /api/v1/bots/{botId}
+
+Update an existing bot. All body fields are optional — only the fields you provide are changed.
+
+**Path parameters**
+
+<ParamField path="botId" type="string" required>
+  The bot's unique identifier.
+</ParamField>
+
+**Request body**
+
+<ParamField body="name" type="string">
+  New display name. 1–255 characters.
+</ParamField>
+
+<ParamField body="systemPrompt" type="string">
+  New system prompt text.
+</ParamField>
+
+<ParamField body="modelId" type="string">
+  New model identifier.
+</ParamField>
+
+**Response 200** — The updated bot object.
+
+**Response 404**
+
+<ResponseField name="message" type="string" required>Error description: `"Bot not found"`.</ResponseField>
+
+```bash
+curl -X PATCH http://localhost:<port>/api/v1/bots/clxyz123 \
+  -H "Authorization: Bearer <GATEWAY_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"systemPrompt": "You are a concise assistant."}'
+```
+
+---
+
+## DELETE /api/v1/bots/{botId}
+
+Delete a bot.
+
+**Path parameters**
+
+<ParamField path="botId" type="string" required>
+  The bot's unique identifier.
+</ParamField>
+
+**Response 200**
+
+<ResponseField name="success" type="boolean" required>
+  `true` when the bot was deleted.
+</ResponseField>
+
+```bash
+curl -X DELETE http://localhost:<port>/api/v1/bots/clxyz123 \
+  -H "Authorization: Bearer <GATEWAY_TOKEN>"
+```
+
+---
+
+## POST /api/v1/bots/{botId}/pause
+
+Pause an active bot. The bot will stop processing new messages until resumed.
+
+**Path parameters**
+
+<ParamField path="botId" type="string" required>
+  The bot's unique identifier.
+</ParamField>
+
+**Response 200** — The updated bot object with `status: "paused"`.
+
+**Response 404** — Bot not found.
+
+---
+
+## POST /api/v1/bots/{botId}/resume
+
+Resume a paused bot.
+
+**Path parameters**
+
+<ParamField path="botId" type="string" required>
+  The bot's unique identifier.
+</ParamField>
+
+**Response 200** — The updated bot object with `status: "active"`.
+
+**Response 404** — Bot not found.
+
+```bash
+curl -X POST http://localhost:<port>/api/v1/bots/clxyz123/resume \
+  -H "Authorization: Bearer <GATEWAY_TOKEN>"
+```

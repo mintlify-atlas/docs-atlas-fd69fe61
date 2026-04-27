@@ -1,0 +1,80 @@
+---
+title: "What is Nexu — local-first AI Agent desktop client"
+description: "What Nexu is, how it compares to alternatives, who it is built for, system requirements, and download links for macOS and Windows."
+---
+
+Nexu (next to you) is an open-source desktop client that runs your **OpenClaw** AI Agent directly inside the messaging apps you already use — WeChat, Feishu, Slack, Discord, and more. Download the app, configure a model, connect a channel, and your Agent is online 24/7, reachable from your phone. All config, credentials, and conversation history stay on your machine. There are no cloud middlemen, no vendor lock-in, and no subscription required for the client itself.
+
+<CardGroup cols={2}>
+  <Card title="Quick start" icon="rocket" href="/quickstart">
+    Get from download to your first Agent conversation in under five minutes.
+  </Card>
+  <Card title="Key concepts" icon="lightbulb" href="/concepts">
+    Understand Agents, Channels, Models, and Skills before you dive in.
+  </Card>
+  <Card title="Connect a channel" icon="plug" href="/channels/overview">
+    Set up Feishu, Slack, Discord, WeChat, or another supported platform.
+  </Card>
+  <Card title="Configure models" icon="brain" href="/models/overview">
+    Use managed Nexu Official models or bring your own API key.
+  </Card>
+</CardGroup>
+
+## How Nexu compares
+
+The table below compares Nexu against running the OpenClaw CLI directly and using typical hosted agent-plus-channel SaaS stacks.
+
+| | OpenClaw (official) | Typical hosted solution | **Nexu** |
+|---|---|---|---|
+| **Models** | BYO, but manual config required | Platform-locked, no switching | Pick Gemini, Anthropic, OpenAI, and more — one-click switch in the GUI; MiniMax, Codex, and GLM support OAuth |
+| **Data path** | Local | Routed through vendor servers — data leaves your control | Local-first; Nexu does not host your business data |
+| **Cost** | Free, but self-deploy required | Subscription or per-seat pricing | Client is free (MIT); pay model providers directly via your own API keys |
+| **Source** | Open source | Closed source, no audit possible | MIT — fork, audit, and extend |
+| **Channels** | DIY integration required | Varies by vendor, often limited | Built-in WeChat, Feishu, Slack, and Discord — works out of the box |
+| **Interface** | CLI, requires technical skills | Varies by vendor | Pure GUI — no terminal needed, double-click to start |
+
+## Use cases
+
+Nexu is built for the **one-person company** and small teams — one person running an AI team.
+
+<AccordionGroup>
+  <Accordion title="Solo e-commerce and cross-border trade">
+    Tell your Agent the product specs in Feishu and get multilingual listings ready for Amazon, Shopee, and TikTok Shop before your coffee cools. Compress product research, competitor pricing, and listing optimization into a single afternoon.
+  </Accordion>
+  <Accordion title="Content creators and knowledge bloggers">
+    Ask your Agent in Slack for trending topics on Monday morning. By lunch you have five draft posts across Xiaohongshu, WeChat, and Twitter — each in the right tone for the platform. Run a content matrix solo with trend tracking, topic generation, and multi-platform publishing.
+  </Accordion>
+  <Accordion title="Indie developers">
+    Paste a stack trace into Discord at 3 AM and your Agent traces it to a race condition, suggests a fix, and drafts the PR description. Code review, doc generation, bug analysis, and repetitive task automation — your Agent is your pair-programming partner that never sleeps.
+  </Accordion>
+  <Accordion title="Legal, finance, and consulting">
+    Forward a 40-page contract on Feishu to your Agent. Ten minutes later you get a risk summary, flagged clauses, and suggested revisions. Contract review, regulation lookup, report generation, and client Q&A — turn domain expertise into Agent skills.
+  </Accordion>
+  <Accordion title="Local business and retail">
+    Customers message at midnight asking about stock. Your Agent in Feishu auto-replies with real-time inventory, handles returns, and sends a promo coupon — so you can actually sleep. Automate inventory management, order follow-up, and marketing copy.
+  </Accordion>
+  <Accordion title="Design and creative work">
+    Drop a rough brief in Slack and your Agent returns copy options, color palette suggestions, and reference images before the kickoff meeting. Requirement breakdown, asset search, and design annotation — free up creative time, cut repetitive work.
+  </Accordion>
+</AccordionGroup>
+
+## System requirements
+
+| Platform | Requirement |
+|---|---|
+| macOS (Apple Silicon) | macOS 12 or later |
+| macOS (Intel) | macOS 12 or later |
+| Windows | Windows 10 or later |
+| Storage | ~500 MB |
+
+## Download Nexu
+
+| Platform | Download |
+|---|---|
+| macOS (Apple Silicon) | [nexu.io](https://nexu.io) · [GitHub Releases](https://github.com/nexu-io/nexu/releases) |
+| macOS (Intel) | [nexu.io](https://nexu.io) · [GitHub Releases](https://github.com/nexu-io/nexu/releases) |
+| Windows | [nexu.io](https://nexu.io) · [GitHub Releases](https://github.com/nexu-io/nexu/releases) |
+
+<Note>
+  Nexu is open-source under the MIT license. The client is free to use, modify, distribute, and build upon — including for commercial use. See the [Developer Guide](/dev/contributing) to contribute or build on top of Nexu.
+</Note>

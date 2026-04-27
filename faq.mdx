@@ -1,0 +1,102 @@
+---
+title: "Frequently asked questions about Nexu"
+description: "Answers to common questions about Nexu's pricing, platform support, IM integrations, data privacy, API keys, WeChat setup, and team use."
+---
+
+This page answers the questions most frequently asked by new and existing Nexu users. If you have a question that is not covered here, open a thread in [GitHub Discussions](https://github.com/nexu-io/nexu/discussions) or send an email to [support@nexu.ai](mailto:support@nexu.ai).
+
+<AccordionGroup>
+  <Accordion title="Is Nexu free?">
+    The client is completely free and open-source under the [MIT License](https://github.com/nexu-io/nexu/blob/main/LICENSE). There is no subscription, no seat pricing, and no paywall for core features.
+
+    Multiple top-tier models (including Gemini) are built in and accessible via your Nexu account. You can also bring your own API Key from any supported provider and use the client entirely without creating an account — you pay the model provider directly at their standard rates.
+  </Accordion>
+
+  <Accordion title="Which operating systems are supported?">
+    Nexu currently supports:
+
+    - **macOS 12 or later** — both Apple Silicon (M-series) and Intel chips
+    - **Windows 10 or later**
+
+    Linux support is not available at this time. If Linux support matters to you, you can follow or upvote the relevant discussion on [GitHub](https://github.com/nexu-io/nexu/discussions).
+
+    System requirements: approximately 500 MB of free storage.
+  </Accordion>
+
+  <Accordion title="Which IM platforms are supported?">
+    The following channels ship built-in and work out of the box:
+
+    - **WeChat** — personal account via the WeChat 8.0.7 OpenClaw plugin
+    - **Feishu (Lark)** — full Feishu Skills integration included
+    - **Slack** — bot and DM support via OAuth
+    - **Discord** — bot integration via Gateway WebSocket
+    - **WeCom (Enterprise WeChat)** — Intelligent Bot with long connection
+    - **DingTalk** — app bot with streaming card support
+    - **Telegram** — bot via BotFather token
+    - **WhatsApp** — personal account via QR scan
+    - **QQ Bot** — via QQ Open Platform
+
+    See [Channels overview](/channels/overview) for setup guides for each platform.
+  </Accordion>
+
+  <Accordion title="Is my data safe?">
+    All data stays on your machine. Nexu is a local-first desktop application — your conversations, credentials, and configuration are never routed through Nexu's servers or any third-party vendor.
+
+    The source code is open source and available for audit on [GitHub](https://github.com/nexu-io/nexu). The MIT license means anyone can inspect, fork, and verify the code at any time.
+
+    For security vulnerability reporting, see [SECURITY.md](https://github.com/nexu-io/nexu/blob/main/SECURITY.md) or contact [support@nexu.ai](mailto:support@nexu.ai) — do not disclose security vulnerabilities through public GitHub issues.
+  </Accordion>
+
+  <Accordion title="Can I use my own API key?">
+    Yes. Go to **Settings → Models**, select your provider, and paste your API key. Once saved, Nexu will use your key for all model calls — no Nexu account required.
+
+    Supported BYOK providers include OpenAI, Anthropic, Gemini, and others. See [Bring your own API key](/models/byok) for the full list and setup steps.
+
+    Your API key is stored locally on your machine and never transmitted to Nexu's servers.
+  </Accordion>
+
+  <Accordion title="What do I need to connect WeChat?">
+    To use the WeChat channel you need:
+
+    1. **WeChat desktop version 8.0.7 or later** installed and running on the same machine as Nexu
+    2. **The WeChat OpenClaw plugin** installed inside the WeChat desktop client
+
+    Once those are in place, click **Connect** in **Settings → Channels → WeChat**, scan the QR code with your mobile WeChat app, and your AI agent will be live in WeChat.
+
+    See [WeChat channel](/channels/wechat) for the full setup walkthrough.
+  </Accordion>
+
+  <Accordion title="Can I use multiple channels at once?">
+    Yes. Nexu supports running multiple channels simultaneously. You can have your agent active in WeChat, Feishu, Slack, and Discord at the same time — all from the same Nexu instance.
+
+    Each channel is configured independently under **Settings → Channels**. See [Channels overview](/channels/overview) for details.
+  </Accordion>
+
+  <Accordion title="Do I need an internet connection to run Nexu?">
+    The Nexu application itself runs locally, but an internet connection is required for:
+
+    - Sending and receiving messages via IM platforms (WeChat, Feishu, Slack, Discord)
+    - Making model API calls to providers (OpenAI, Gemini, etc.)
+    - Fetching skill updates from the Nexu SkillHub
+
+    The application can start and load your configuration offline, but your agent will not be able to respond to messages or access model APIs without connectivity.
+  </Accordion>
+
+  <Accordion title="Can I use Nexu for a team?">
+    Nexu is currently a single-user desktop application — one instance manages one user's agents and channels on one machine. It is well-suited for solo operators, indie developers, and One Person Company setups.
+
+    That said, multiple team members can each run their own Nexu instance independently. The source is MIT-licensed, so teams can also fork and extend the codebase for their own use case.
+
+    Team and multi-user features are on the roadmap. Follow [GitHub Discussions](https://github.com/nexu-io/nexu/discussions) for updates.
+  </Accordion>
+
+  <Accordion title="Where are my credentials stored?">
+    All credentials — API keys, channel tokens, signing secrets — are stored locally on your machine under `~/.nexu/` (`NEXU_HOME`). This directory survives application reinstalls, so your configuration is preserved when you update Nexu.
+
+    Nexu never transmits credentials to its own servers. Channel tokens are used only to communicate directly with the respective IM platform APIs.
+
+    If you need to fully remove all stored credentials, delete the `~/.nexu/` directory and the Electron user data at `~/Library/Application Support/@nexu/desktop/` (macOS) after uninstalling Nexu.
+
+    <Warning>Deleting `~/.nexu/` removes all your Nexu configuration, including bot settings, compiled configs, and skill state. Make sure to back up anything you want to keep.</Warning>
+  </Accordion>
+</AccordionGroup>

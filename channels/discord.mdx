@@ -1,0 +1,90 @@
+---
+title: "Connect Nexu to Discord"
+description: "Create a Discord application, copy its Application ID and Bot Token, paste them into Nexu, then invite the bot to your server with the right permissions."
+---
+
+Nexu connects to Discord using the Discord Gateway (WebSocket), which means no public IP address or callback URL is needed. All you need are two values from the Discord Developer Portal: an **Application ID** and a **Bot Token**.
+
+## Setup steps
+
+<Steps>
+  <Step title="Create a Discord application">
+    1. Go to the [Discord Developer Portal](https://discord.com/developers/applications) and click **New Application**.
+    2. Enter a name for your application and click **Create**.
+    3. On the **General Information** page, copy and save the **Application ID**.
+  </Step>
+
+  <Step title="Generate a Bot Token">
+    1. In the left sidebar, click **Bot**.
+    2. Click **Reset Token** to generate a new Bot Token.
+    3. Copy and save the **Bot Token** — this is shown only once. If you lose it, you must reset and generate a new one.
+
+    <Warning>
+      Keep your Bot Token secret. Anyone with this token can control your bot. Never share it publicly or commit it to version control.
+    </Warning>
+  </Step>
+
+  <Step title="Add credentials to Nexu">
+    Open the Nexu client, navigate to **Channels → Discord**, paste your **Application ID** and **Bot Token** into the fields, and click **Connect**.
+
+    Nexu validates the token against the Discord API. If the Application ID does not match the token, you will see an `app_id_mismatch` error — double-check both values from the same application.
+  </Step>
+
+  <Step title="Enable Message Content Intent">
+    Without this intent, Discord blocks bots from reading the content of messages.
+
+    1. In the Discord Developer Portal, go to **Bot** in the left sidebar.
+    2. Under **Privileged Gateway Intents**, enable **Message Content Intent**.
+    3. Click **Save Changes**.
+
+    <Warning>
+      If Message Content Intent is not enabled, your bot will connect successfully but will not be able to read or reply to messages.
+    </Warning>
+  </Step>
+
+  <Step title="Generate an invite URL and add the bot to your server">
+    1. In the left sidebar, go to **OAuth2**.
+    2. Under **Scopes**, select `bot`.
+    3. Under **Bot Permissions**, select `Administrator`.
+    4. Copy the generated URL at the bottom of the page and open it in your browser.
+    5. Select the server you want to add the bot to and click **Continue**.
+    6. Review the permissions and click **Authorize**.
+
+    <Note>
+      The `Administrator` permission grants the bot full access to the server. If you prefer a more restrictive setup, you can select individual permissions instead — at minimum the bot needs **Send Messages**, **Read Message History**, and **View Channels**.
+    </Note>
+  </Step>
+
+  <Step title="Test the connection">
+    Once the bot has been added to your server, click **Chat** in the Nexu client to open Discord. Send a message to your bot (mention it in a channel or use a direct message) to confirm it responds.
+  </Step>
+</Steps>
+
+## Bot permission notes
+
+| Permission approach | Trade-offs |
+|---|---|
+| `Administrator` | Easiest to set up; works for all current and future features |
+| Granular permissions | More secure; requires manual updates if new features need new permissions |
+
+The minimum permissions required for basic chat are: **Send Messages**, **Read Message History**, **View Channels**, and **Add Reactions**.
+
+<Note>
+  Nexu uses the Discord Gateway WebSocket connection — no public IP or webhook URL is required. The bot connects outbound from your machine.
+</Note>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="'Application ID does not match the provided Bot Token'">
+    Both the Application ID and Bot Token must come from the **same** Discord application. Go to the Developer Portal and verify you are copying from the correct app. The Application ID is on the **General Information** page; the Bot Token is on the **Bot** page.
+  </Accordion>
+
+  <Accordion title="The bot connects but does not reply to messages">
+    Check that **Message Content Intent** is enabled on the **Bot** page of the Discord Developer Portal. Without it, Discord strips message content before delivering it to your bot.
+  </Accordion>
+
+  <Accordion title="The bot does not appear in my server">
+    Make sure you completed the OAuth2 invite flow (Step 5). Simply creating the application and adding credentials to Nexu is not enough — the bot must be explicitly invited to each server you want it to operate in.
+  </Accordion>
+</AccordionGroup>

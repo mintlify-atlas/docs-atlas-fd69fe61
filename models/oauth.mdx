@@ -1,0 +1,94 @@
+---
+title: "OAuth model login: MiniMax, Codex, GLM"
+description: "Use OAuth to connect MiniMax, OpenAI Codex, or GLM/Z.AI to Nexu — authorize in one click without copying API keys. Access tokens are stored locally."
+---
+
+Some providers support OAuth login as an alternative to pasting a raw API key. With OAuth, Nexu opens the provider's authorization page in your browser, you sign in, and the resulting access token is stored locally. This avoids handling long-lived API keys directly and is useful when the provider's billing is already tied to your account login.
+
+<Note>
+  OAuth grants a token scoped to your account login. Manual BYOK key entry is still available for all supported providers — see [Bring Your Own Key](/models/byok) if you prefer that path.
+</Note>
+
+## Supported OAuth providers
+
+| Provider | Notes |
+| --- | --- |
+| MiniMax | Supports global and CN region selection |
+| OpenAI Codex | Uses the `openai-codex-responses` API |
+| GLM / Z.AI | Uses the `openai-completions` API |
+
+## MiniMax OAuth
+
+<Steps>
+  <Step title="Open Settings">
+    Click **Settings** in the left sidebar of the Nexu client.
+  </Step>
+  <Step title="Select MiniMax">
+    Choose **MiniMax** from the provider list on the left.
+  </Step>
+  <Step title="Choose your region">
+    Select **Global** or **CN** depending on your MiniMax account region.
+  </Step>
+  <Step title="Click Sign in">
+    Click **Sign in with MiniMax**. Nexu opens the MiniMax authorization page in your browser.
+  </Step>
+  <Step title="Authorize in browser">
+    Log in and grant access. Nexu polls for the result automatically.
+  </Step>
+  <Step title="Select the active model">
+    Once connected, use the **Nexu Bot Model** dropdown to choose a MiniMax model.
+  </Step>
+</Steps>
+
+<Tip>
+  To disconnect, return to the MiniMax provider page in Settings and click **Sign out**.
+</Tip>
+
+## OpenAI Codex OAuth
+
+<Steps>
+  <Step title="Open Settings">
+    Click **Settings** in the left sidebar of the Nexu client.
+  </Step>
+  <Step title="Select OpenAI Codex">
+    Choose **OpenAI Codex** from the provider list.
+  </Step>
+  <Step title="Click Sign in">
+    Click **Sign in with OpenAI**. Nexu opens the OpenAI authorization page in your browser.
+  </Step>
+  <Step title="Authorize in browser">
+    Log in with your OpenAI account and grant Codex access.
+  </Step>
+  <Step title="Select the active model">
+    Once connected, choose an available Codex model from the **Nexu Bot Model** dropdown.
+  </Step>
+</Steps>
+
+## GLM / Z.AI OAuth
+
+<Steps>
+  <Step title="Open Settings">
+    Click **Settings** in the left sidebar of the Nexu client.
+  </Step>
+  <Step title="Select GLM / Z.AI">
+    Choose **GLM** or **Z.AI** from the provider list.
+  </Step>
+  <Step title="Click Sign in">
+    Click **Sign in**. Nexu opens the Z.AI authorization page in your browser.
+  </Step>
+  <Step title="Authorize in browser">
+    Log in and grant access. Nexu stores the resulting token locally.
+  </Step>
+  <Step title="Select the active model">
+    Choose a GLM model from the **Nexu Bot Model** dropdown.
+  </Step>
+</Steps>
+
+## OAuth vs. BYOK
+
+| | OAuth login | BYOK (API key) |
+| --- | --- | --- |
+| Key management | Nexu handles token refresh | You manage the key |
+| Billing | Tied to your provider account login | Tied to the API key |
+| Availability | MiniMax, Codex, GLM only | All supported providers |
+| Region selection | Required for MiniMax (global / CN) | Optional proxy URL |

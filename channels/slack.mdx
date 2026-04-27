@@ -1,0 +1,79 @@
+---
+title: "Connect Nexu to Slack"
+description: "Use a one-click app manifest to create a pre-configured Slack bot, then paste the Bot Token and Signing Secret into Nexu to connect in minutes."
+---
+
+Nexu connects to Slack with a **Bot User OAuth Token** and a **Signing Secret**. The quickest path is the one-click manifest link below, which creates a Slack app with all required permissions and event subscriptions already configured — no manual OAuth scope selection needed.
+
+## Setup steps
+
+<Steps>
+  <Step title="Create a pre-configured Slack app (one-click)">
+    Click the link below to open the Slack app creation page with a pre-filled manifest:
+
+    [Create Slack App with manifest](https://api.slack.com/apps?new_app=1&manifest_json=%7B%22display_information%22%3A%7B%22name%22%3A%22Nexu%22%2C%22description%22%3A%22Nexu%20%E2%80%94%20AI-powered%20workspace%20for%20your%20team%22%2C%22background_color%22%3A%22%2329292b%22%7D%2C%22features%22%3A%7B%22bot_user%22%3A%7B%22display_name%22%3A%22Nexu%22%2C%22always_online%22%3Atrue%7D%7D%2C%22oauth_config%22%3A%7B%22redirect_urls%22%3A%5B%22https%3A%2F%2Fapi.nexu.io%2Fapi%2Foauth%2Fslack%2Fcallback%22%5D%2C%22scopes%22%3A%7B%22bot%22%3A%5B%22app_mentions%3Aread%22%2C%22assistant%3Awrite%22%2C%22channels%3Ahistory%22%2C%22channels%3Aread%22%2C%22chat%3Awrite%22%2C%22chat%3Awrite.customize%22%2C%22chat%3Awrite.public%22%2C%22files%3Aread%22%2C%22files%3Awrite%22%2C%22groups%3Ahistory%22%2C%22groups%3Aread%22%2C%22im%3Ahistory%22%2C%22im%3Aread%22%2C%22im%3Awrite%22%2C%22im%3Awrite.topic%22%2C%22links%3Awrite%22%2C%22metadata.message%3Aread%22%2C%22mpim%3Ahistory%22%2C%22mpim%3Aread%22%2C%22mpim%3Awrite%22%2C%22mpim%3Awrite.topic%22%2C%22reactions%3Awrite%22%2C%22remote_files%3Aread%22%2C%22team%3Aread%22%2C%22usergroups%3Aread%22%2C%22users%3Aread%22%2C%22users.profile%3Aread%22%5D%7D%7D%2C%22settings%22%3A%7B%22event_subscriptions%22%3A%7B%22request_url%22%3A%22https%3A%2F%2Fapi.nexu.io%2Fapi%2Fslack%2Fevents%22%2C%22bot_events%22%3A%5B%22app_mention%22%2C%22app_uninstalled%22%2C%22file_created%22%2C%22message.channels%22%2C%22message.groups%22%2C%22message.im%22%2C%22message.mpim%22%2C%22subteam_created%22%2C%22team_join%22%2C%22team_rename%22%2C%22tokens_revoked%22%5D%7D%2C%22org_deploy_enabled%22%3Afalse%2C%22socket_mode_enabled%22%3Afalse%2C%22token_rotation_enabled%22%3Afalse%7D%7D)
+
+    1. Select the workspace you want to install to and click **Next**.
+    2. Review the pre-configured permissions and event subscriptions, then click **Create**.
+    3. Click **Got It** to dismiss the welcome dialog.
+
+    <Note>
+      The manifest pre-configures all required bot OAuth scopes and event subscriptions automatically. You do not need to set up permissions manually.
+    </Note>
+  </Step>
+
+  <Step title="Copy the Signing Secret">
+    In your new Slack app:
+
+    1. Go to **Basic Information** in the left sidebar.
+    2. Scroll to **App Credentials** and copy the **Signing Secret**.
+  </Step>
+
+  <Step title="Install the app and copy the Bot Token">
+    1. In the left sidebar, go to **Install App** and click **Install to Workspace**.
+    2. Review the permission request and click **Allow**.
+    3. On the confirmation page, copy the **Bot User OAuth Token** (starts with `xoxb-`).
+  </Step>
+
+  <Step title="Enable direct messages">
+    To let users message your bot directly:
+
+    1. In the left sidebar, go to **App Home**.
+    2. Scroll to **Show Tabs → Messages Tab** and make sure it is enabled.
+    3. Check **Allow users to send Slash commands and messages from the messages tab**.
+  </Step>
+
+  <Step title="Add credentials to Nexu">
+    Open the Nexu client, navigate to **Channels → Slack**, paste your **Bot User OAuth Token** and **Signing Secret** into the fields, and click **Connect**.
+
+    Once connected, click **Chat** to open your Slack workspace and start a direct message with your bot.
+  </Step>
+</Steps>
+
+## What permissions are requested
+
+The manifest requests the following bot OAuth scopes:
+
+| Scope | Purpose |
+|---|---|
+| `app_mentions:read` | Detect @mentions of the bot |
+| `assistant:write` | Write to the Slack AI assistant thread |
+| `channels:history`, `channels:read` | Read public channel messages |
+| `chat:write`, `chat:write.customize`, `chat:write.public` | Send and customize messages |
+| `files:read`, `files:write` | Read and upload files |
+| `groups:history`, `groups:read` | Read private channel messages |
+| `im:history`, `im:read`, `im:write`, `im:write.topic` | Direct message read/write |
+| `mpim:history`, `mpim:read`, `mpim:write`, `mpim:write.topic` | Multi-party DM read/write |
+| `reactions:write` | Add emoji reactions |
+| `team:read` | Read workspace info |
+| `users:read`, `users.profile:read` | Read user profiles |
+| `usergroups:read` | Read user groups |
+| `metadata.message:read`, `remote_files:read`, `links:write` | Message metadata and file links |
+
+And the following bot events:
+
+`app_mention`, `message.channels`, `message.groups`, `message.im`, `message.mpim`, `file_created`, `team_join`, `team_rename`, `subteam_created`, `app_uninstalled`, `tokens_revoked`
+
+<Note>
+  No public server or callback URL configuration is required. Nexu handles all event receiving internally once the credentials are set.
+</Note>

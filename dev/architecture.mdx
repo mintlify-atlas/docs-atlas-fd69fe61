@@ -1,0 +1,181 @@
+---
+title: "Nexu architecture: controller-first local runtime"
+description: "How Nexu's desktop shell, Hono controller, OpenClaw runtime, and React frontend fit together — data flows, type safety, and persistence."
+---
+
+Nexu uses a controller-first local runtime model. A single `apps/controller` process is the source of truth for all Nexu config: it reads user settings, compiles them into an OpenClaw configuration, materializes skill files and templates, and orchestrates the embedded OpenClaw runtime. The Electron desktop shell wraps this controller-first stack with a web sidecar and a native window, but the controller remains the authoritative process even in the packaged app.
+
+## System diagram
+
+```
+Desktop Shell (Electron) / Browser
+           ↓
+Web (React + Ant Design + Vite)
+           ↓
+Controller (Hono + Zod OpenAPI + lowdb local store)
+           ↓
+OpenClaw Runtime → Slack / Discord / Feishu API
+```
+
+The web frontend always communicates with the controller over HTTP using the auto-generated SDK. The controller writes OpenClaw config and hot-signals the runtime when config changes. The runtime handles all outbound channel connections — Slack, Feishu, Discord, and others.
+
+## Tech stack
+
+| Layer | Technology |
+| --- | --- |
+| Local control plane | Hono + `@hono/zod-openapi` |
+| Local persistence | lowdb + JSON config under `~/.nexu/` |
+| Validation | Zod (single source of truth) |
+| Frontend | React + Ant Design + Vite |
+| Frontend SDK | `@hey-api/openapi-ts` (auto-generated from OpenAPI spec) |
+| State management | React Query (`@tanstack/react-query`) |
+| Lint / format | Biome |
+| Package manager | pnpm workspaces |
+
+## Type safety chain
+
+Zod schemas are defined once and types flow in one direction. Types are never hand-written or duplicated:
+
+```
+Zod Schema (define once in packages/shared/ or route file)
+  → API route validation (@hono/zod-openapi createRoute)
+  → OpenAPI spec (auto-generated via pnpm generate-types)
+  → Frontend SDK types (@hey-api/openapi-ts)
+  → Local store and runtime types (z.infer<typeof schema>)
+```
+
+<Warning>
+  Never write types that duplicate a schema. Use `z.infer<typeof schema>`. All API routes must use `createRoute()` + `app.openapi()` — plain `app.get()` / `app.post()` bypass OpenAPI spec generation and the generated SDK will not include corresponding functions.
+</Warning>
+
+After any API route or schema change, regenerate the SDK:
+
+```bash
+pnpm generate-types
+pnpm typecheck
+```
+
+## Monorepo layout
+
+<AccordionGroup>
+  <Accordion title="apps/controller/">
+    The single-user local control plane. Routes live in `src/routes/`, the local config store in `src/store/`, OpenClaw runtime integration in `src/runtime/`, and the config compiler at `src/lib/openclaw-config-compiler.ts`.
+  </Accordion>
+  <Accordion title="apps/web/">
+    React frontend. Pages in `src/pages/`, the generated HTTP SDK in `lib/api/`, auth client in `src/lib/auth-client.ts`. The web app uses the generated SDK for all API calls — never raw `fetch`.
+  </Accordion>
+  <Accordion title="apps/desktop/">
+    Electron desktop runtime shell and sidecar orchestrator. The active runtime path launches `controller + web + openclaw` sidecars only — no legacy `api`, `gateway`, or `pglite` sidecars.
+
+    Key files in `apps/desktop/main/`:
+    - `index.ts` — `gracefulShutdown()` entry point for all quit paths
+    - `services/quit-handler.ts` — `runTeardownAndExit()` for launchd mode
+    - `services/launchd-manager.ts` — launchd service lifecycle
+    - `services/launchd-bootstrap.ts` — cold-start and version-aware attach logic
+    - `updater/update-manager.ts` — evidence-based safe update install
+  </Accordion>
+  <Accordion title="packages/shared/">
+    Shared Zod schemas in `src/schemas/`. Includes bot, channel, gateway, invite, model, skill, and OpenClaw config schemas. Build this package first on a fresh clone: `pnpm --filter @nexu/shared build`.
+  </Accordion>
+  <Accordion title="packages/slimclaw/">
+    Repo-local Nexu-owned OpenClaw runtime contract, prepared runtime root, and staging/patch ownership for local development and desktop packaging. Installed automatically by `pnpm install`.
+  </Accordion>
+  <Accordion title="nexu-skills/">
+    Public file-based skill repository. Each skill is a directory containing a `SKILL.md` with frontmatter. The controller scans this directory and serves catalog, install, and uninstall flows via HTTP. `skills.json` is the built catalog index.
+  </Accordion>
+  <Accordion title="specs/">
+    Design docs, API pattern references, product specs, execution plans, and generated artifacts. Start with `ARCHITECTURE.md` for the bird's-eye view, then `specs/references/api-patterns.md` for coding conventions.
+  </Accordion>
+</AccordionGroup>
+
+## Key data flows
+
+### Config generation
+
+The controller compiles Nexu config into an OpenClaw-compatible JSON document and writes it to `OPENCLAW_CONFIG_PATH`. OpenClaw then hot-reloads from that file.
+
+```
+Controller reads ~/.nexu/config.json
+  → openclaw-config-compiler.ts builds agents, channels, bindings, models
+  → Writes compiled config to OPENCLAW_CONFIG_PATH
+  → Writes managed skills and templates
+  → OpenClaw hot-reloads
+```
+
+The config compiler (`apps/controller/src/lib/openclaw-config-compiler.ts`) enforces several critical constraints:
+- `bindings[].agentId` must match a valid entry in `agents.list[].id`
+- `bindings[].match.accountId` must match a key in `channels.{slack|feishu}.accounts`
+- Slack HTTP mode requires `signingSecret`; `groupPolicy` must be `"open"`
+- Only one agent should have `default: true`
+
+<Note>
+  The OpenClaw provider/model registry is **not hot-reload-safe**. Any code path that mutates `models.providers` in `openclaw.json` (cloud login/logout, BYOK add/delete, OAuth connect/disconnect) must call `openclawProcess.restart(reason)` after `syncAll()`. Writing the config file alone is not enough — OpenClaw builds its registry once at boot.
+</Note>
+
+### Desktop runtime boot
+
+```
+Electron starts
+  → Reads runtime-ports.json (identity check: appVersion, userDataPath, buildSource, openclawStateDir, NEXU_HOME)
+  → Attaches to running services if identity matches, else cold-starts
+  → Starts controller sidecar, waits for readiness and auth bootstrap
+  → Starts web sidecar
+  → Delegates OpenClaw process management to controller
+```
+
+On startup, `bootstrapWithLaunchd()` performs a multi-field identity check before deciding whether to attach to already-running services or do a fresh cold start. Any field mismatch triggers an automatic boot-out and fresh start, transparent to the user.
+
+### Channel connection flows
+
+```
+Frontend calls controller route (via generated SDK)
+  → Controller validates and stores local credentials/config
+  → Controller recompiles OpenClaw config
+  → Runtime writers materialize updated state
+  → OpenClaw reloads
+```
+
+Slack events are handled through the controller-compiled OpenClaw runtime. Feishu uses a long-lived runtime connection driven by the same compiled config.
+
+### Skill catalog
+
+Skills are file-based. The controller scans `nexu-skills/skills/` for `SKILL.md` frontmatter and serves catalog, install, and uninstall flows via HTTP. SkillHub operations run in the controller — not in the Electron main process. The local runtime watches the managed skills directory for hot-reload.
+
+## Persistence
+
+All Nexu-owned state is persisted under `~/.nexu/` via controller store modules. `config.json` is the main source of truth. OpenClaw runtime state lives under `OPENCLAW_STATE_DIR`.
+
+### Packaged app directory layout
+
+In the packaged app, state is split across two directories intentionally: `NEXU_HOME` holds lightweight user preferences and extracted runtime sidecars that persist across reinstalls; Electron `userData` holds heavy runtime state tied to the app lifecycle.
+
+| Directory | Purpose | Survives uninstall |
+| --- | --- | --- |
+| `~/.nexu/` (`NEXU_HOME`) | User config (`config.json`, `cloud-profiles.json`), compiled snapshots (`compiled-openclaw.json`), skill ledger (`skill-ledger.json`), SkillHub cache, analytics state, logs | Yes |
+| `~/.nexu/runtime/nexu-runner.app/` | APFS-cloned Electron binary + Frameworks for launchd services | Yes |
+| `~/.nexu/runtime/controller-sidecar/` | APFS-cloned controller sidecar (dist + node_modules) | Yes |
+| `~/.nexu/runtime/openclaw-sidecar/` | Extracted OpenClaw sidecar from `.app` payload | Yes |
+| `~/Library/Application Support/@nexu/desktop/` (Electron `userData`) | OpenClaw runtime state: agent conversations, channel state, skill state, `openclaw.json`, Electron internals (Cache, IndexedDB, etc.) | No — cleaned by uninstall tools |
+
+<Note>
+  Launchd services reference only paths under `~/.nexu/runtime/` — never paths inside the `.app` bundle. This means the packaged app can be replaced by a Finder drag-and-drop while services continue running in the background.
+</Note>
+
+In development, all state lives under `.tmp/desktop/nexu-home/` in the repo root, fully isolated from the packaged app. To reset dev state: stop the stack and remove `.tmp/desktop/`.
+
+## Further reading
+
+<CardGroup cols={2}>
+  <Card title="Local setup" icon="terminal" href="/dev/local-setup">
+    Prerequisites, install steps, and common dev commands.
+  </Card>
+  <Card title="Contributing" icon="git-pull-request" href="/dev/contributing">
+    How to open issues, branches, commits, and pull requests.
+  </Card>
+  <Card title="Skills authoring" icon="puzzle" href="/dev/skills-authoring">
+    Build and publish file-based skills for the Nexu skill catalog.
+  </Card>
+  <Card title="API overview" icon="webhook" href="/dev/api-overview">
+    Controller HTTP API conventions and the generated SDK.
+  </Card>
+</CardGroup>

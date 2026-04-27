@@ -1,0 +1,211 @@
+---
+title: "Build and publish custom Nexu skills"
+description: "Learn how to create a skill directory with a SKILL.md file and give your Nexu agents new capabilities through structured prompt instructions."
+---
+
+A skill is a directory that contains a `SKILL.md` file and optional reference documents. When a skill is installed, the agent reads its instructions and gains new capabilities — such as knowing how to interact with a specific API, follow a particular workflow, or answer domain-specific questions. Skills are the primary way to extend what a Nexu agent can do without changing any code.
+
+## Skill directory structure
+
+Every skill lives in its own directory. The directory name becomes the skill's slug and must match the `name` field in `SKILL.md`.
+
+```
+my-skill/
+├── SKILL.md       # Required: frontmatter + prompt instructions
+└── references/    # Optional: reference documents for the agent
+    ├── schema.md
+    └── examples.md
+```
+
+<Note>
+  The directory name must be a valid slug: lowercase letters, digits, and hyphens only, starting with a letter or digit (e.g., `my-skill`, `feishu-bitable`).
+</Note>
+
+The `references/` subdirectory is optional. Use it to store supplementary documents the agent can consult when it needs more detail — for example, field type schemas, error code tables, or worked examples. Reference documents are plain Markdown files. The agent is instructed when and how to use them via the body of `SKILL.md`.
+
+## SKILL.md structure
+
+`SKILL.md` has two parts: a YAML frontmatter block that provides metadata consumed by the SkillHub catalog and UI, and a Markdown body that is the actual prompt injected into the agent's context when the skill is active.
+
+### Frontmatter fields
+
+<ParamField path="name" type="string" required>
+  The skill's unique identifier. Must be a slug that matches the containing directory name (e.g., `feishu-bitable`).
+</ParamField>
+
+<ParamField path="description" type="string" required>
+  A plain-text description of what the skill does and when the agent should activate it. The agent reads this to decide whether to load the skill for a given request.
+</ParamField>
+
+<ParamField path="tag" type="string">
+  Category tag shown in the skill catalog UI (e.g., `office-collab`, `file-knowledge`, `dev-tools`).
+</ParamField>
+
+<ParamField path="icon" type="string">
+  A [Lucide](https://lucide.dev/icons/) icon name shown next to the skill in the catalog (e.g., `Table2`, `Calendar`, `FilePlus`).
+</ParamField>
+
+<ParamField path="source" type="string">
+  Origin of the skill. Use `official` for skills published in the `nexu-skills` repository. Use `custom` for locally imported skills. The SkillHub also tracks `workspace` and `user` origins internally.
+</ParamField>
+
+<ParamField path="prompt" type="string">
+  A single-line hint displayed in the chat UI when the skill is active. Keep it short and descriptive.
+</ParamField>
+
+<ParamField path="examples" type="string[]">
+  A list of example user messages that demonstrate when this skill is appropriate. The agent uses these to understand the skill's intended scope.
+</ParamField>
+
+<ParamField path="requires.plugins" type="string[]">
+  npm packages that must be installed as OpenClaw plugins for this skill to work. Specified as scoped package names (e.g., `@larksuite/openclaw-lark`).
+</ParamField>
+
+### Full SKILL.md example
+
+The following example is based on the official `feishu-bitable` skill. Use it as a template for your own skills.
+
+```yaml SKILL.md
+---
+name: github-issues
+description: |
+  Create, query, and update GitHub issues and pull requests.
+
+  Use this skill when:
+  (1) The user wants to create, search, or close a GitHub issue
+  (2) The user asks about pull request status or review comments
+  (3) The user mentions "issue", "PR", "pull request", or a GitHub repo URL
+tag: dev-tools
+icon: GitPullRequest
+source: custom
+prompt: Help me manage GitHub issues and pull requests
+examples:
+  - Create a bug report for the login page crash
+  - List all open issues assigned to me
+  - Close issue #42 and add a comment
+requires:
+  plugins:
+    - "@octokit/openclaw-github"
+---
+
+# GitHub Issues skill
+
+## Before you start
+
+- Always confirm the target repository (`owner/repo`) before creating or modifying anything.
+- Use `issues.list` with `state: open` as the default; set `state: closed` only when the user asks for closed items.
+- When creating an issue, include `title` (required) and `body` (recommended). Set `labels` and `assignees` only when the user specifies them.
+
+## Intent → tool → required parameters
+
+| User intent | Tool | Required params |
+|-------------|------|-----------------|
+| Create issue | github_issue | create | owner, repo, title |
+| List issues | github_issue | list | owner, repo |
+| Close issue | github_issue | update | owner, repo, issue_number, state="closed" |
+| Add comment | github_issue_comment | create | owner, repo, issue_number, body |
+
+## Reference documents
+
+- **[Field schema](references/schema.md)** — All fields accepted by `github_issue.create` and `github_issue.update`.
+- **[Examples](references/examples.md)** — Complete workflows for common scenarios.
+```
+
+## Writing effective skill instructions
+
+The body of `SKILL.md` is injected verbatim into the agent's system prompt when the skill activates. The quality of your instructions directly determines how reliably the agent performs.
+
+<Steps>
+  <Step title="State activation conditions explicitly">
+    List concrete signals that should trigger the skill — specific words the user might say, types of tasks, or objects the user is working with. The `description` frontmatter field is a condensed version of this; the body can go deeper.
+
+    ```markdown
+    Use this skill when:
+    (1) The user mentions "bitable", "spreadsheet database", or "多维表格"
+    (2) The user asks to create, query, or update records in a structured table
+    ```
+  </Step>
+
+  <Step title="Document schema knowledge the model doesn't have">
+    APIs often have quirks — required value formats, field type constraints, or parameter interactions — that are not obvious from the tool schema alone. Document them explicitly.
+
+    ```markdown
+    ## Critical constraints
+
+    - Date fields require millisecond timestamps (e.g., `1674206443000`), not strings.
+    - Person fields require `[{id: "ou_xxx"}]` — an array of objects with only an `id` key.
+    - Single-select fields take a string; multi-select fields take a string array.
+    ```
+  </Step>
+
+  <Step title="Provide a quick-reference intent table">
+    A table mapping user intent → tool → required parameters saves the agent from having to reason about tool selection from scratch on every request.
+
+    ```markdown
+    | User intent | Tool | Action | Required |
+    |-------------|------|--------|---------|
+    | Query records | feishu_bitable_app_table_record | list | app_token, table_id |
+    | Create a record | feishu_bitable_app_table_record | create | app_token, table_id, fields |
+    ```
+  </Step>
+
+  <Step title="Link to reference documents">
+    For complex skills, move detailed schema tables and worked examples into the `references/` directory. Tell the agent exactly when to consult each file.
+
+    ```markdown
+    When you receive error code 125408X, check references/field-properties.md.
+    For complete field value formats, see references/record-values.md.
+    ```
+  </Step>
+
+  <Step title="Document error codes">
+    Include a table of common error codes and their fixes. The agent can then self-correct without asking the user.
+
+    ```markdown
+    | Error code | Meaning | Fix |
+    |------------|---------|-----|
+    | 1254064 | DatetimeFieldConvFail | Use millisecond timestamp |
+    | 1254015 | Field type mismatch | Call field.list first, then match value format |
+    ```
+  </Step>
+</Steps>
+
+## Where to place your skill
+
+<CardGroup cols={2}>
+  <Card title="Official skills" icon="book-open">
+    Official Nexu skills live in the `nexu-skills/skills/` directory of the `nexu-io/nexu` repository. They are published to the SkillHub catalog and available to all users via **Settings → Skills**.
+  </Card>
+  <Card title="Custom skills" icon="package">
+    Custom skills are imported as `.zip` archives through **Settings → Skills → Import**. The zip must contain a `SKILL.md` at its root (or inside a single top-level directory). The slug is derived from the directory name.
+  </Card>
+</CardGroup>
+
+<Tip>
+  After installing a custom skill via zip import, it is available to the agent immediately — no restart required. The SkillHub watcher detects the new directory and syncs it into the OpenClaw runtime automatically.
+</Tip>
+
+## Hot-loading behavior
+
+Skills are loaded by the OpenClaw runtime's file watcher. When a skill is installed (or its files change on disk), the controller reconciles the skill ledger and triggers a config sync. The updated skill configuration reaches the running agent without a restart.
+
+<Warning>
+  If a skill has a `requires.plugins` entry, the listed npm packages must already be installed as OpenClaw plugins. Missing plugins will cause the skill's tools to be unavailable at runtime even if the skill loads correctly.
+</Warning>
+
+## Related pages
+
+<CardGroup cols={2}>
+  <Card title="Frontmatter field reference" icon="list" href="/dev/skills-reference">
+    Complete reference for every SKILL.md frontmatter field, install status values, and error codes.
+  </Card>
+  <Card title="Skills catalog" icon="grid-2x2" href="/skills/catalog">
+    Browse officially published skills available in the SkillHub.
+  </Card>
+  <Card title="Custom skills (user guide)" icon="wrench" href="/skills/custom">
+    How to import and manage custom skills from the Nexu desktop app.
+  </Card>
+  <Card title="Architecture overview" icon="layers" href="/dev/architecture">
+    How the controller, SkillHub, and OpenClaw runtime interact.
+  </Card>
+</CardGroup>

@@ -1,0 +1,52 @@
+---
+title: "Connect your Agent to a messaging channel"
+description: "Nexu supports Feishu, Slack, Discord, WeChat, WeCom, DingTalk, Telegram, WhatsApp, and QQ — connect one or several simultaneously."
+---
+
+Nexu is a local-first platform: your agent runs on your own machine and your channel credentials never leave your device. Once you connect a channel, your OpenClaw agent starts receiving messages directly through that platform's native protocol — no public server required.
+
+<Note>
+  All credentials (App IDs, Bot Tokens, Secrets) are stored on your device only. Nexu never uploads them to any cloud service.
+</Note>
+
+## Available channels
+
+<CardGroup cols={2}>
+  <Card title="Feishu (Lark)" icon="message" href="/channels/feishu">
+    Connect via App ID and App Secret from the Feishu Open Platform. Uses long-connection (WebSocket) — no public callback URL needed.
+  </Card>
+  <Card title="Slack" icon="slack" href="/channels/slack">
+    One-click app manifest sets up all permissions and event subscriptions automatically. Connect with a Bot Token and Signing Secret.
+  </Card>
+  <Card title="Discord" icon="discord" href="/channels/discord">
+    Create a Discord Application, copy the Application ID and Bot Token, and paste into Nexu. Uses the Discord Gateway — no public IP needed.
+  </Card>
+  <Card title="WeChat" icon="mobile" href="/channels/wechat">
+    Requires WeChat 8.0.7+ with the OpenClaw ClawBot plugin. Scan a QR code to connect your personal WeChat account in under 5 minutes.
+  </Card>
+  <Card title="WeCom, DingTalk, Telegram, WhatsApp & QQ" icon="grid-2" href="/channels/other">
+    Additional supported platforms: WeCom Intelligent Bot, DingTalk app bot, Telegram BotFather, WhatsApp QR scan, and QQ Open Platform.
+  </Card>
+</CardGroup>
+
+## Channel comparison
+
+| Channel | Credentials needed | Setup complexity | Best for |
+|---|---|---|---|
+| **Feishu (Lark)** | App ID + App Secret | Medium (permissions import + event config) | Enterprise teams using Feishu/Lark |
+| **Slack** | Bot Token + Signing Secret | Low (one-click manifest) | Remote/international teams on Slack |
+| **Discord** | Application ID + Bot Token | Low | Developer communities and gaming |
+| **WeChat** | QR scan (personal account) | Low (requires WeChat 8.0.7+) | Personal use via mobile |
+| **WeCom** | Bot ID + Secret | Medium | Enterprise teams on WeCom |
+| **DingTalk** | Client ID + Client Secret | Medium (bot capability + publish) | Enterprise teams on DingTalk |
+| **Telegram** | Bot Token (via BotFather) | Low | Personal and group bots |
+| **WhatsApp** | QR scan (personal account) | Low | Personal use via mobile |
+| **QQ** | App ID + App Secret | Low | QQ user communities |
+
+<Note>
+  You can connect multiple channels at the same time. Your agent responds across all connected platforms simultaneously.
+</Note>
+
+## Local-first: your credentials stay on your device
+
+Nexu is a desktop-first application. Every credential you enter — App IDs, Bot Tokens, Signing Secrets, QR-derived session keys — is stored in your local config file under `~/.nexu/` and never transmitted to Nexu servers. The agent runtime communicates directly with each messaging platform from your own machine.

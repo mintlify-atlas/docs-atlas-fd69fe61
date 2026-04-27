@@ -1,0 +1,111 @@
+---
+title: "Agents, Channels, Models, and Skills"
+description: "Learn how Agents, Channels, Models, and Skills work together in Nexu — what each concept means, how they connect, and where to configure each one."
+---
+
+Nexu is built around four core concepts: the **Agent** that processes conversations, the **Channels** where users talk to it, the **Models** that power its reasoning, and the **Skills** that extend what it can do. Understanding how these fit together makes every other part of the documentation easier to follow.
+
+## Agent
+
+The Agent is the central runtime unit in Nexu. It is a persistent AI assistant that listens on one or more channels, understands conversation context, and executes tasks using configured models and installed skills.
+
+Each Nexu workspace runs a single Agent instance. That Agent can connect to multiple channels simultaneously — your team might reach it on Slack while you personally chat with it on WeChat. The Agent stays online as long as the Nexu desktop app is running on your machine.
+
+Under the hood, the Agent is powered by the **OpenClaw runtime**: a local process managed by the Nexu controller that compiles your configuration (models, channels, skills) into a running Agent. When you change a setting in the dashboard, the controller recompiles the config and OpenClaw hot-reloads — no restart needed.
+
+<Note>
+  All Agent state — conversations, credentials, installed skills — lives on your local machine under `~/.nexu/` and the Electron user data directory. Nothing is uploaded to Nexu servers.
+</Note>
+
+## Channels
+
+Channels are the messaging platforms where your Agent interacts with users. Nexu includes built-in support for the most popular platforms; each one has a dedicated setup flow in the dashboard that handles authentication and connection automatically.
+
+| Channel | Setup method | Common use |
+|---|---|---|
+| Feishu (Lark) | App ID + App Secret | Teams in China, enterprise workflows |
+| Slack | Manifest-based one-click app creation | Global teams, developer workflows |
+| Discord | Application ID + Bot Token | Developer communities, hobby projects |
+| WeChat | QR code scan via OpenClaw plugin (v8.0.7) | Personal use, consumer outreach |
+| WeCom (Enterprise WeChat) | Bot webhook or app credentials | Enterprise internal tools |
+| DingTalk | App credentials | Enterprise teams in China |
+| Telegram | Bot token | International users |
+| WhatsApp | Business API credentials | Customer support, outreach |
+| QQ Bot | App ID + token | Gaming and community use |
+
+You can connect multiple channels at the same time. The same Agent responds on all of them, maintaining separate conversation contexts per channel and per user.
+
+See [Channel configuration](/channels/overview) for platform-specific setup guides.
+
+## Models
+
+Models determine how your Agent reasons, what it knows, and how good its responses are. Nexu supports two integration paths that you can switch between at any time without affecting existing conversations or channel connections.
+
+### Nexu Official
+
+Sign in with your Nexu account and high-quality managed models are ready to use immediately — no API key required. This is the easiest way to get started.
+
+### BYOK — Bring Your Own Key
+
+Connect your own account with any of the supported providers. API keys are stored locally on your device and are never sent to Nexu servers.
+
+| Provider | Default base URL | Key format |
+|---|---|---|
+| Anthropic | `https://api.anthropic.com` | `sk-ant-...` |
+| OpenAI | `https://api.openai.com/v1` | `sk-...` |
+| Google AI | `https://generativelanguage.googleapis.com/v1beta` | `AIza...` |
+| xAI | `https://api.x.ai/v1` | `xai-...` |
+| Custom | Your OpenAI-compatible endpoint | Depends on the provider |
+
+MiniMax, OpenAI Codex, and GLM (Z.AI Coding Plan) also support **OAuth login** — authorize with one click, no key copy-paste required.
+
+You can configure multiple BYOK providers simultaneously and switch the active model from the **Nexu Bot Model** dropdown in Settings at any time.
+
+See [Model configuration](/models/overview), [BYOK setup](/models/byok), and [OAuth models](/models/oauth) for details.
+
+## Skills
+
+Skills are the extensibility system for the Agent. Each skill is a standalone, hot-loadable module that gives the Agent a specific new capability: querying a database, reading and writing Feishu Bitable records, generating documents, calling a third-party API, or running a custom workflow.
+
+Skills are installed and managed through the Nexu controller. There are two sources:
+
+**Skill catalog** — A curated library of pre-built skills available for one-click installation from the Nexu dashboard. The catalog includes skills for Feishu Bitable, Feishu Docs, Feishu Calendar, Feishu Tasks, and more.
+
+**Custom skills** — You can write your own skills as file-based modules and load them into Nexu for local development or private use. The controller watches the managed skills directory and hot-reloads changes without requiring a restart.
+
+<Tip>
+  Skills are hot-loadable. Installing, updating, or removing a skill takes effect immediately — the Agent picks up the change without any downtime.
+</Tip>
+
+See [Skills overview](/skills/overview), [Skills catalog](/skills/catalog), and [Custom skills](/skills/custom) for more.
+
+## How the four concepts connect
+
+```
+You (via Feishu, Slack, Discord, WeChat, ...)
+          ↓  Channel
+        Agent  ←  Skills (extend capabilities)
+          ↓
+        Model  (Nexu Official or BYOK provider)
+          ↓
+      Response back to you
+```
+
+When you send a message on a connected channel, the OpenClaw runtime routes it to the Agent. The Agent uses the configured model to reason about the message, invokes any relevant installed skills (for example, to look up a Feishu Bitable record), and sends the response back through the same channel.
+
+## Related pages
+
+<CardGroup cols={2}>
+  <Card title="Quick start" icon="rocket" href="/quickstart">
+    Follow a step-by-step guide to connect your first channel.
+  </Card>
+  <Card title="Channel guides" icon="plug" href="/channels/overview">
+    Detailed setup instructions for every supported platform.
+  </Card>
+  <Card title="Model configuration" icon="brain" href="/models/overview">
+    Configure Nexu Official or add a BYOK provider.
+  </Card>
+  <Card title="Skills catalog" icon="puzzle-piece" href="/skills/catalog">
+    Browse and install pre-built skills for your Agent.
+  </Card>
+</CardGroup>

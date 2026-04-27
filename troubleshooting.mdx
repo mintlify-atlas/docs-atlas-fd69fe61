@@ -1,0 +1,125 @@
+---
+title: "Troubleshoot Nexu installation and channels"
+description: "Step-by-step fixes for the most common Nexu issues: port conflicts, install errors, channel connectivity, API key rejections, and WeChat QR code problems."
+---
+
+If Nexu is not behaving as expected, this page covers the most common issues and how to resolve them. Each entry lists the symptoms you will see, the root cause, and the exact steps to fix it.
+
+<AccordionGroup>
+  <Accordion title="Nexu does not launch / port conflict with OpenClaw">
+    **Symptoms**
+
+    Nexu does not respond after launch, crashes immediately, or reports that a port is already in use.
+
+    **Root cause**
+
+    The OpenClaw background gateway service (`ai.openclaw.gateway`) is still occupying the required port, preventing Nexu from starting correctly.
+
+    **Fix**
+
+    1. Open Terminal and run the following commands one by one:
+
+    ```bash
+    launchctl bootout gui/$(id -u)/ai.openclaw.gateway
+    rm ~/Library/LaunchAgents/ai.openclaw.gateway.plist
+    ```
+
+    The first command stops the OpenClaw gateway service immediately. The second removes the auto-start configuration so it does not conflict again after reboot.
+
+    2. Reopen Nexu and confirm that it starts normally.
+
+    <Tip>If the `launchctl bootout` command returns an error saying the service is not loaded, the service was already stopped — you can safely proceed to the `rm` step.</Tip>
+  </Accordion>
+
+  <Accordion title='"Nexu.app Is in Use" during install or update'>
+    **Symptoms**
+
+    macOS shows a message saying it cannot complete the action because `Nexu.app` is currently in use.
+
+    **Root cause**
+
+    Nexu background processes are still running, so macOS cannot replace the old application bundle. This happens because Nexu runs launchd-managed sidecar processes that keep file handles open inside the `.app` bundle.
+
+    **Fix**
+
+    1. Open Terminal and run the following command to stop all Nexu-related processes:
+
+    ```bash
+    curl -fsSL https://desktop-releases.nexu.io/scripts/kill-all.sh | bash
+    ```
+
+    2. After the script finishes, reinstall Nexu or drag the new `Nexu.app` into Applications again.
+
+    <Note>If you prefer not to pipe a script directly into bash, you can download it first with `curl -fsSL https://desktop-releases.nexu.io/scripts/kill-all.sh -o kill-all.sh`, inspect the contents, then run `bash kill-all.sh`.</Note>
+  </Accordion>
+
+  <Accordion title="Channel not receiving messages">
+    **Symptoms**
+
+    A channel (Feishu, Slack, Discord, or WeChat) appears connected in the Nexu dashboard, but messages sent to the bot receive no reply or are silently dropped.
+
+    **Root cause**
+
+    Common causes include: the OpenClaw runtime has not fully started yet, the channel token has expired or been revoked, or the compiled OpenClaw config has not been synced after a recent settings change.
+
+    **Fix**
+
+    1. Open Nexu and check the status indicator for the affected channel. A yellow or red indicator means the channel is not active.
+    2. Disconnect and reconnect the channel from **Settings → Channels**.
+    3. If the issue persists, restart the Nexu runtime from the menu bar icon by selecting **Restart**.
+    4. Check that your bot has the correct permissions in the IM platform (for Slack, confirm the bot has been added to the channel; for Feishu, confirm the app is published and the bot permission scope includes message events).
+    5. For Slack specifically, verify that the signing secret and bot token in Nexu match the values currently shown in your Slack app configuration at [api.slack.com/apps](https://api.slack.com/apps).
+
+    <Tip>See [Channels overview](/channels/overview) for platform-specific setup requirements.</Tip>
+  </Accordion>
+
+  <Accordion title="Model API key rejected">
+    **Symptoms**
+
+    After entering an API key under **Settings → Models**, Nexu shows an authentication error, or messages to the bot return a "model unavailable" or "invalid key" response.
+
+    **Root cause**
+
+    The API key may be malformed, belong to a different environment (e.g. a test key used in production), have insufficient quota or permissions, or the key may have been revoked by the provider.
+
+    **Fix**
+
+    1. Double-check the key by copying it directly from your provider's dashboard (not from a cached clipboard entry).
+    2. Ensure the key has the required permissions — for example, OpenAI keys need the `model:read` and `chat:completions` scopes, while Gemini keys must have the Generative Language API enabled in your Google Cloud project.
+    3. Confirm you have active quota and billing set up with the provider.
+    4. In Nexu, go to **Settings → Models**, delete the existing key entry, and re-add it.
+    5. If the model provider offers OAuth login (MiniMax, OpenAI Codex, GLM / Z.AI Coding Plan), consider using OAuth instead of a raw API key — see [OAuth login](/models/oauth) for details.
+
+    <Note>Nexu never logs or transmits your API keys. All credentials are stored locally on your machine — see [Where are my credentials stored?](/faq) for more detail.</Note>
+  </Accordion>
+
+  <Accordion title="WeChat QR code not appearing">
+    **Symptoms**
+
+    The WeChat channel setup screen is stuck at a loading spinner, or the QR code never appears after clicking **Connect**.
+
+    **Root cause**
+
+    The WeChat channel requires the WeChat 8.0.7 desktop client with the OpenClaw plugin installed. If the plugin is missing, outdated, or the WeChat client is not running, Nexu cannot generate the QR code.
+
+    **Fix**
+
+    1. Confirm that WeChat desktop version 8.0.7 or later is installed and running on the same machine as Nexu.
+    2. Verify that the OpenClaw plugin for WeChat has been installed inside the WeChat client.
+    3. Close and reopen Nexu, then navigate back to **Settings → Channels → WeChat** and click **Connect** again.
+    4. If the QR code appears but scanning does not complete, make sure your mobile WeChat app is logged into the same account as the desktop WeChat client.
+    5. Try clicking **Refresh** on the QR code screen — QR codes expire after a short window and need to be regenerated.
+
+    <Tip>For full step-by-step WeChat setup instructions, see [WeChat channel](/channels/wechat).</Tip>
+  </Accordion>
+</AccordionGroup>
+
+<Info>
+If none of the above resolves your issue, reach out through one of these channels:
+
+- **GitHub Issues**: [github.com/nexu-io/nexu/issues](https://github.com/nexu-io/nexu/issues) — bug reports and feature requests
+- **GitHub Discussions**: [github.com/nexu-io/nexu/discussions](https://github.com/nexu-io/nexu/discussions) — questions and general help
+- **Email**: [support@nexu.ai](mailto:support@nexu.ai) — private inquiries
+
+See [Community](/community) for the full list of support channels.
+</Info>

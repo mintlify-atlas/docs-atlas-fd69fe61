@@ -1,0 +1,36 @@
+---
+title: "Extend your Agent with Skills"
+description: "Skills are hot-loadable modules that give your Nexu Agent new capabilities — from Feishu Bitable and calendar operations to custom tools. No restart needed."
+---
+
+Skills extend your Agent's capabilities beyond the defaults. Each skill is a self-contained module with a prompt, tool definitions, and optional plugin requirements. When you install a skill, the controller materializes it into the OpenClaw runtime and your Agent gains access to it immediately — no restart required.
+
+## What you can do with skills
+
+- **Database operations** — create and query Feishu Bitable tables and records
+- **Calendar and tasks** — manage Feishu calendar events, attendees, and task lists
+- **Document management** — create, fetch, and update Feishu cloud documents
+- **IM and messaging** — read group chat history and search messages across conversations
+- **Troubleshooting** — run diagnostic tools for the Feishu plugin
+
+## How skills work
+
+1. Skills are defined in the `nexu-skills/` repository as directories, each containing a `SKILL.md` file with frontmatter and prompt content.
+2. The controller's SkillHub service reads the catalog, tracks installed skills, and manages an install/uninstall queue.
+3. When a skill is installed, the controller calls `syncAll()` to write updated OpenClaw configuration, including the skill's prompt and plugin requirements.
+4. The OpenClaw runtime picks up the change and makes the skill available in the next conversation turn — without restarting.
+
+<Note>
+  Skills activate immediately after installation. You do not need to restart the Agent or reload any configuration.
+</Note>
+
+## Explore more
+
+<CardGroup cols={2}>
+  <Card title="Skill catalog" icon="grid-2x2" href="/skills/catalog">
+    Browse and install official Nexu skills from the in-app skill hub.
+  </Card>
+  <Card title="Custom skills" icon="code" href="/skills/custom">
+    Create your own skills using a SKILL.md file and load them locally.
+  </Card>
+</CardGroup>

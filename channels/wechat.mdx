@@ -1,0 +1,88 @@
+---
+title: "Connect Nexu to WeChat via OpenClaw"
+description: "Scan a QR code to connect your personal WeChat account to Nexu using the OpenClaw ClawBot plugin. Requires WeChat 8.0.7+ on macOS 12+ (Apple Silicon)."
+---
+
+Nexu connects to WeChat through the **OpenClaw ClawBot plugin**, which is built into WeChat 8.0.7 and later. The entire setup is a single QR-code scan — no WeChat Work account, no Official Account, and no public server required. The process takes under 5 minutes.
+
+<Warning>
+  **WeChat 8.0.7 or later is required.** Older versions of WeChat do not include the ClawBot plugin that Nexu depends on. Update WeChat before proceeding.
+</Warning>
+
+## Prerequisites
+
+- **WeChat** version 8.0.7 or later (check via WeChat → About)
+- **macOS 12+** on Apple Silicon (M1/M2/M3)
+- Nexu installed ([download at nexu.io](https://nexu.io))
+
+## Setup steps
+
+<Steps>
+  <Step title="Update WeChat to 8.0.7 or later">
+    Open WeChat on your Mac and update to version 8.0.7 or later. This is the minimum version that includes the ClawBot plugin Nexu uses to receive messages.
+
+    To check your version: open WeChat → menu bar → **WeChat → About WeChat**.
+  </Step>
+
+  <Step title="Sign in to Nexu">
+    Open Nexu from your Applications folder. On the welcome screen, choose a sign-in method:
+
+    - **Use your Nexu account** (recommended) — sign in to get access to Claude, GPT, Gemini, and other top models.
+    - **Use your own models (BYOK)** — enter your own API key; no Nexu account required.
+  </Step>
+
+  <Step title="Select the WeChat channel">
+    On the Nexu home screen, click **WeChat** in the **Choose a channel to get started** section.
+  </Step>
+
+  <Step title="Scan to connect WeChat">
+    1. When the **Connect WeChat** dialog appears, click the green **Scan to Connect** button.
+    2. Nexu automatically installs the WeChat ClawBot plugin and generates a QR code. The screen shows **Waiting for scan…**
+    3. Open WeChat on your **phone**, tap **Scan** (or use the QR scanner in the WeChat search bar), and scan the QR code displayed on your Mac screen.
+    4. Tap **Confirm** on your phone to authorize the connection.
+
+    <Note>
+      The QR code is generated fresh each time. If it expires before you scan it, click **Scan to Connect** again to get a new one.
+    </Note>
+  </Step>
+
+  <Step title="Confirm the connection">
+    After you confirm on your phone, the WeChat channel on the Nexu home screen shows a **Connected** status. The connection is now live.
+  </Step>
+</Steps>
+
+## Chatting with your agent on mobile
+
+Once connected, open WeChat on your phone (or Mac). You will see a conversation named **WeChat ClawBot** in your chat list. Send any message to that conversation to start chatting with your OpenClaw agent.
+
+<Tip>
+  The WeChat ClawBot conversation is available on both your phone and Mac. After the initial QR scan on your computer, you can chat with your agent entirely from your phone — no desktop interaction needed for ongoing use.
+</Tip>
+
+## Frequently asked questions
+
+<AccordionGroup>
+  <Accordion title="Do I need WeChat Work or an Official Account?">
+    No. The ClawBot plugin works with a personal WeChat account (version 8.0.7+). WeChat Work and Official Accounts are separate products and are not required.
+  </Accordion>
+
+  <Accordion title="Will my WeChat account get banned?">
+    No. ClawBot is an official WeChat plugin built into the app. Using it is fully compliant with WeChat's terms of service.
+  </Accordion>
+
+  <Accordion title="Do I need a public server or callback URL?">
+    No. Nexu connects directly through the WeChat ClawBot plugin using a local connection. No public IP address or webhook is required.
+  </Accordion>
+
+  <Accordion title="Can the agent reply when my Mac is asleep or off?">
+    The Nexu client must be running and your Mac must not be asleep. As long as Nexu is active in the background, your agent can reply to WeChat messages 24/7.
+  </Accordion>
+
+  <Accordion title="Can I connect WeChat and other channels at the same time?">
+    Yes. Nexu supports simultaneous connections to WeChat, Feishu, Slack, Discord, and other channels. Your agent responds across all connected platforms.
+  </Accordion>
+
+  <Accordion title="How do I switch the AI model used in WeChat?">
+    Use the model selector at the top of the Nexu home screen to switch between Claude, GPT, Gemini, and other models. The change applies to all connected channels immediately.
+  </Accordion>
+</AccordionGroup>

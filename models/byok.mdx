@@ -1,0 +1,60 @@
+---
+title: "Bring Your Own Key (BYOK) model setup"
+description: "Connect Anthropic, OpenAI, Google AI, xAI, or a custom provider to Nexu using your own API key. Keys are stored locally and never uploaded."
+---
+
+BYOK (Bring Your Own Key) lets you use your own provider API key with Nexu. Nexu stores the key locally on your device, verifies connectivity, and loads the available model list automatically. You are billed directly by the provider — no Nexu credits are consumed.
+
+## Setup steps
+
+<Steps>
+  <Step title="Open Settings">
+    Click **Settings** in the left sidebar of the Nexu client to open the AI Model Providers page.
+  </Step>
+  <Step title="Select your provider">
+    Choose a provider from the list on the left — **Anthropic**, **OpenAI**, **Google AI**, **xAI**, or **Custom**.
+  </Step>
+  <Step title="Paste your API key">
+    Enter your API key in the **API Key** field. See the table below for the expected key format per provider.
+  </Step>
+  <Step title="Set a proxy URL (optional)">
+    If you need to route requests through a custom gateway or self-hosted proxy, update the **API Proxy URL** field. Leave it at the default if you do not use a proxy.
+  </Step>
+  <Step title="Save">
+    Click **Save**. Nexu verifies the key and loads the available model list.
+  </Step>
+  <Step title="Select the active model">
+    Use the **Nexu Bot Model** dropdown at the top of the Settings page to choose which model your Agent uses.
+  </Step>
+</Steps>
+
+## Supported providers
+
+| Provider | Default base URL | Key format |
+| --- | --- | --- |
+| Anthropic | `https://api.anthropic.com` | `sk-ant-...` |
+| OpenAI | `https://api.openai.com/v1` | `sk-...` |
+| Google AI | `https://generativelanguage.googleapis.com/v1beta` | `AIza...` |
+| xAI | `https://api.x.ai/v1` | `xai-...` |
+| Custom | Your OpenAI-compatible endpoint | Depends on provider |
+
+<Tip>
+  Use **Custom** if you need a self-hosted gateway, an OpenAI-compatible inference server, or a proxy in front of another provider.
+</Tip>
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="Can I configure multiple providers at the same time?">
+    Yes. Each provider is configured independently. You can have Anthropic, OpenAI, and a Custom provider all saved at once, then switch between them using the model selector.
+  </Accordion>
+  <Accordion title="Are my API keys uploaded to Nexu servers?">
+    No. API keys are stored on your local device only and are never transmitted to Nexu servers.
+  </Accordion>
+  <Accordion title="When should I use the API Proxy URL?">
+    Use the proxy URL field when you route model traffic through a custom gateway, a self-hosted reverse proxy, or an OpenAI-compatible endpoint that lives at a different URL than the provider default. For direct provider access, leave the field at its default value.
+  </Accordion>
+  <Accordion title="Does BYOK consume Nexu credits?">
+    No. In BYOK mode, Nexu calls the provider directly using your key. Charges go to your provider account. Nexu credits are only consumed when using Nexu Official managed models.
+  </Accordion>
+</AccordionGroup>

@@ -1,0 +1,212 @@
+---
+title: "Nexu skills: frontmatter field reference"
+description: "Complete reference for every SKILL.md frontmatter field, install status values, and SkillHub error codes used by the Nexu controller."
+---
+
+Every skill in Nexu is defined by a `SKILL.md` file whose YAML frontmatter block provides the metadata the SkillHub catalog, install queue, and agent runtime all depend on. This page documents every supported field, the install lifecycle status values, and the error codes returned by the SkillHub API.
+
+## SKILL.md frontmatter fields
+
+The frontmatter block is delimited by `---` at the top of the file. All fields that are not marked required are optional but recommended for a good catalog experience.
+
+### Core identity
+
+<ParamField path="name" type="string" required>
+  The skill's unique identifier in slug format. Must match the name of the containing directory exactly. Valid characters: lowercase letters (`a–z`), digits (`0–9`), and hyphens (`-`). Must start with a letter or digit. Maximum 128 characters.
+
+  ```yaml
+  name: feishu-bitable
+  ```
+</ParamField>
+
+<ParamField path="description" type="string" required>
+  A plain-text description of the skill's purpose and the conditions under which the agent should activate it. This is the primary signal the agent uses to decide whether to load the skill for a given request. Write it from the agent's perspective: describe what the skill enables and list explicit activation triggers.
+
+  Supports YAML block scalar syntax (`|`) for multiline descriptions.
+
+  ```yaml
+  description: |
+    Create, query, and manage Feishu Bitable databases.
+
+    Use this skill when:
+    (1) The user asks to create or query a Bitable app
+    (2) The user mentions "bitable", "多维表格", or "spreadsheet database"
+  ```
+</ParamField>
+
+<ParamField path="source" type="string">
+  Indicates the origin of the skill. The `skillFrontmatterSchema` accepts three values:
+
+  | Value | Meaning |
+  |-------|---------|
+  | `official` | Published in the `nexu-skills` repository and available in the SkillHub catalog |
+  | `community` | Community-contributed skill; treated similarly to `official` in the catalog |
+  | `custom` | Imported locally via zip upload; not in the public catalog |
+
+  Set `source: official` for skills you intend to publish to the catalog. Set `source: custom` for private or experimental skills. The controller also tracks `managed`, `workspace`, and `user` install sources internally in the skill ledger — these are assigned automatically and cannot be set in the frontmatter.
+
+  ```yaml
+  source: official
+  ```
+</ParamField>
+
+### Catalog display
+
+<ParamField path="tag" type="string">
+  A category tag used to group skills in the catalog UI. Use one of the established tags for consistency:
+
+  | Tag | Description |
+  |-----|-------------|
+  | `office-collab` | Collaboration tools: calendar, messaging, tasks |
+  | `file-knowledge` | Document creation, reading, and knowledge management |
+  | `dev-tools` | Developer utilities, diagnostics, code tools |
+
+  You may define new tags for custom skills, but they will not appear in the catalog filter until added to the catalog configuration.
+
+  ```yaml
+  tag: office-collab
+  ```
+</ParamField>
+
+<ParamField path="icon" type="string">
+  A [Lucide](https://lucide.dev/icons/) icon name shown next to the skill in the catalog and skill detail panel. Use PascalCase as Lucide defines the icon names.
+
+  ```yaml
+  icon: Table2
+  ```
+
+  Common examples from official skills: `Table2`, `Calendar`, `FilePlus`, `FileSearch`, `FileEdit`, `MessageSquare`, `CheckSquare`, `Wrench`.
+</ParamField>
+
+### Agent interaction
+
+<ParamField path="prompt" type="string">
+  A single-line hint displayed in the Nexu chat UI when this skill is active. Shown to help the user understand what the agent can do with this skill loaded.
+
+  Keep it under 80 characters. Write it as an imperative or descriptive phrase, not a sentence.
+
+  ```yaml
+  prompt: Help me manage Feishu Bitable databases
+  ```
+</ParamField>
+
+<ParamField path="examples" type="string[]">
+  A list of example user messages that illustrate when this skill applies. The agent uses these to calibrate its understanding of the skill's scope. Include 2–5 examples covering different phrasings and intents.
+
+  ```yaml
+  examples:
+    - Create a customer management spreadsheet database
+    - Query records where status is "In Progress"
+    - Bulk import data into a Bitable table
+  ```
+</ParamField>
+
+### Dependencies
+
+<ParamField path="requires.plugins" type="string[]">
+  npm package names for OpenClaw plugins that must be installed for this skill's tools to be available at runtime. Specified as fully-qualified scoped package names.
+
+  If any listed plugin is missing, the skill's tools will not be available even if the skill loads correctly. The controller does not automatically install plugins listed here; they must be installed separately as part of OpenClaw plugin setup.
+
+  ```yaml
+  requires:
+    plugins:
+      - "@larksuite/openclaw-lark"
+  ```
+</ParamField>
+
+---
+
+## Install status values
+
+When you install a skill from the SkillHub catalog, the install progresses through a queue. The `status` field on a queue item reflects the current stage.
+
+| Status | Description |
+|--------|-------------|
+| `queued` | The install request has been accepted and is waiting for a free slot in the queue (max 2 concurrent installs). |
+| `downloading` | The skill files are being downloaded from the ClawHub registry via the `clawhub` CLI. |
+| `installing-deps` | The skill directory contains a `package.json`; `npm install` is running to install its dependencies. |
+| `done` | The skill is fully installed. The controller has recorded it in the skill ledger and triggered an OpenClaw config sync. |
+| `failed` | The install failed. The `error` and `errorCode` fields on the queue item contain details. The item remains in the queue UI so you can retry or dismiss it. |
+
+<Note>
+  Failed items are retained in the queue UI until you explicitly retry (which re-enqueues the item and clears the failed entry) or dismiss it via the cancel action. This is intentional: the UI shows a retry affordance rather than silently disappearing.
+</Note>
+
+---
+
+## Error codes
+
+The SkillHub returns structured error codes on install failures and zip import rejections. These appear in the `errorCode` field of a queue item and in the `POST /api/v1/skillhub/import` response body.
+
+| Code | Trigger | Meaning | What to do |
+|------|---------|---------|------------|
+| `skill_not_found` | The slug does not exist in the ClawHub registry. | The requested skill is not published or the slug is misspelled. | Verify the slug in the SkillHub catalog. |
+| `rate_limit` | The ClawHub API returned a rate-limit response. | Too many install requests in a short window. | The queue pauses automatically and retries (up to 5 times with backoff). Wait for the retry to complete. |
+| `npm_missing` | `npm` is not available in the controller's PATH. | The skill has a `package.json` but npm cannot be found. | Ensure npm is installed and accessible to the Nexu controller process. |
+| `deps_install_failed` | `npm install` exited with a non-zero code. | One or more npm dependencies failed to install. | Check the error message for the failing package. You may need to resolve a network, registry, or version conflict. |
+| `unknown` | None of the above patterns matched. | An unexpected error occurred during install. | Inspect the full error message in the queue item for details. |
+
+<Tip>
+  The `rate_limit` code triggers automatic retries with exponential backoff. The queue pauses for the duration indicated in the error response (capped at 60 seconds) before retrying. You do not need to take any action unless the skill reaches the maximum retry count (5).
+</Tip>
+
+---
+
+## SkillHub API endpoints
+
+These endpoints are served by the Nexu controller at `http://localhost:<controller-port>/api/v1/skillhub`.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/catalog` | Returns the full catalog, installed skills, and current install queue. |
+| `POST` | `/install` | Enqueues a skill install by slug. |
+| `POST` | `/uninstall` | Uninstalls a skill by slug and source. |
+| `POST` | `/cancel` | Cancels a queued or dismisses a failed install. |
+| `POST` | `/refresh` | Forces a catalog refresh from the remote registry. |
+| `GET` | `/skills/{slug}` | Returns detail for a single skill. |
+| `POST` | `/import` | Imports a custom skill from a `.zip` file (multipart upload, max 50 MB). |
+
+---
+
+## Hot-loading behavior
+
+Skills are available to the agent immediately after install completes — no restart of the Nexu controller or the OpenClaw runtime is required.
+
+The controller runs a `SkillDirWatcher` that monitors the skills directory with Node.js `fs.watch`. When a skill directory is added or removed, the watcher reconciles the skill ledger within 500 ms (debounced) and triggers a full `syncAll()` to push the updated configuration to the OpenClaw runtime.
+
+<Warning>
+  The hot-reload path applies to skill content (SKILL.md and reference files). If a skill's `requires.plugins` lists an OpenClaw plugin that is not yet installed, hot-reloading the skill will not make its tools available. Plugin registration happens at OpenClaw startup and requires a runtime restart.
+</Warning>
+
+---
+
+## Skill sources and storage locations
+
+The controller resolves skill files from different directories depending on the `source` value recorded in the skill ledger.
+
+| Source | Storage path | Notes |
+|--------|-------------|-------|
+| `managed` | `<skills-dir>/<slug>/` | Skills installed from the SkillHub catalog. Shared across all agents. |
+| `custom` | `<skills-dir>/<slug>/` | Skills imported via zip. Same directory as managed; distinguished by ledger entry only. |
+| `workspace` | `<openclaw-state-dir>/agents/<agentId>/skills/<slug>/` | Skills scoped to a single agent. Requires `agentId` for install and uninstall operations. |
+| `user` | `<user-skills-dir>/<slug>/` | Skills placed in the user-level skills directory (e.g., `~/.agents/skills/`). |
+
+The skill ledger (`skill-ledger.json` under `~/.nexu/`) is the single source of truth for which skills are installed and under which source. Disk state is reconciled against the ledger on startup and whenever the watcher fires.
+
+## Related pages
+
+<CardGroup cols={2}>
+  <Card title="Authoring guide" icon="pen-to-square" href="/dev/skills-authoring">
+    Step-by-step guide to writing a SKILL.md, structuring reference documents, and publishing a skill.
+  </Card>
+  <Card title="Skills catalog" icon="grid-2x2" href="/skills/catalog">
+    Browse officially published skills available in the SkillHub.
+  </Card>
+  <Card title="Custom skills (user guide)" icon="upload" href="/skills/custom">
+    How to import and manage custom skills from the Nexu desktop app.
+  </Card>
+  <Card title="API skills endpoint" icon="code" href="/dev/api-skills">
+    Full API reference for the SkillHub routes.
+  </Card>
+</CardGroup>
